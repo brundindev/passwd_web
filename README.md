@@ -8,7 +8,7 @@
 
 <h5 align="center">by Alejandro Alberto Jiménez Brundin </h5>
 
-<h4 align="center">Una aplicación multiplataforma para almacenar, cifrar y gestionar contraseñas de manera segura, construida con <a href="https://flutter.dev/" target="_blank">Flutter</a> y <a href="https://firebase.google.com/" target="_blank">Firebase</a>.</h4>
+<h4 align="center">Una web de muestra para enseñar el proyecto <a href="https://github.com/brundindev/passwd./" target="_blank">PASSWD</a> en <a href="https://es.react.dev/" target="_blank">React</a> y <a href="https://tailwindcss.com/" target="_blank">Tailwind CSS</a> .</h4>
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/github/v/release/brundindev/gestor-passwords" alt="Versión"></a>
