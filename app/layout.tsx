@@ -4,6 +4,8 @@ import { Inter } from "next/font/google";
 import localFont from "next/font/local";
 
 import Header from "@/components/ui/header";
+import Footer from "@/components/ui/footer";
+import ChatBot from "@/components/ui/chatbot/ChatBot";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -12,35 +14,15 @@ const inter = Inter({
 });
 
 const nacelle = localFont({
-  src: [
-    {
-      path: "../public/fonts/nacelle-regular.woff2",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/nacelle-italic.woff2",
-      weight: "400",
-      style: "italic",
-    },
-    {
-      path: "../public/fonts/nacelle-semibold.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "../public/fonts/nacelle-semibolditalic.woff2",
-      weight: "600",
-      style: "italic",
-    },
-  ],
+  src: "../public/fonts/Nacelle-Regular.woff2",
   variable: "--font-nacelle",
   display: "swap",
 });
 
 export const metadata = {
-  title: "PASSWD. - Gestor de Contraseñas",
-  description: "Gestor de contraseñas seguro y fácil de usar",
+  title: "PASSWD - Gestor de Contraseñas Seguro",
+  description:
+    "PASSWD es un gestor de contraseñas seguro y fácil de usar. Protege tus cuentas online con contraseñas fuertes y almacenamiento cifrado.",
 };
 
 export default function RootLayout({
@@ -51,11 +33,13 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${inter.variable} ${nacelle.variable} bg-gray-950 font-inter text-base text-gray-200 antialiased`}
+        className={`${inter.variable} ${nacelle.variable} bg-gray-900 font-inter text-gray-100 tracking-tight`}
       >
-        <div className="flex min-h-screen flex-col overflow-hidden supports-[overflow:clip]:overflow-clip">
+        <div className="flex min-h-screen flex-col overflow-hidden">
           <Header />
-          {children}
+          <main className="grow">{children}</main>
+          <Footer />
+          <ChatBot />
         </div>
       </body>
     </html>
