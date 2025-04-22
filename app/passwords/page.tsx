@@ -130,7 +130,12 @@ export default function Passwords() {
   });
 
   // Obtener categorías únicas de las contraseñas
-  const categories = ["all", ...new Set(passwords.map(p => p.categoria).filter(Boolean))];
+  // Modificamos para evitar el error de Set con ES5
+  const categoriesSet = new Set<string>();
+  passwords.forEach(p => {
+    if (p.categoria) categoriesSet.add(p.categoria);
+  });
+  const categories = ["all", ...Array.from(categoriesSet)];
 
   // Variantes para animaciones
   const containerVariants = {
