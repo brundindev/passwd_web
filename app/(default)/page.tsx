@@ -1,30 +1,43 @@
 "use client";
 
-import PageIllustration from "@/components/page-illustration";
+import Image from "next/image";
 import Hero from "@/components/hero-home";
 import Workflows from "@/components/workflows";
 import Features from "@/components/features";
 import Cta from "@/components/cta";
 import PageTransition from "@/components/ui/animation/page-transition";
 import ScrollAnimation from "@/components/ui/animation/scroll-animation";
+import PageIllustration from "@/components/page-illustration";
 
 export default function Home() {
   return (
     <PageTransition>
-      <PageIllustration />
-      <Hero />
-      
-      <ScrollAnimation variant="fadeInUp" delay={0.2}>
-        <Workflows />
-      </ScrollAnimation>
-      
-      <ScrollAnimation variant="fadeInUp" delay={0.3}>
-        <Features />
-      </ScrollAnimation>
-      
-      <ScrollAnimation variant="zoomIn" delay={0.4}>
-        <Cta />
-      </ScrollAnimation>
+      <div className="flex flex-col min-h-screen overflow-hidden">
+        <main className="-mt-32 w-full">
+          {/* Illustration */}
+          <PageIllustration />
+
+          {/* Hero section */}
+          <ScrollAnimation className="mb-8">
+            <Hero />
+          </ScrollAnimation>
+
+          {/* How it works */}
+          <ScrollAnimation className="mb-16">
+            <Workflows />
+          </ScrollAnimation>
+
+          {/* Features */}
+          <ScrollAnimation className="mb-20">
+            <Features />
+          </ScrollAnimation>
+
+          {/* CTA */}
+          <ScrollAnimation>
+            <Cta />
+          </ScrollAnimation>
+        </main>
+      </div>
     </PageTransition>
   );
 }

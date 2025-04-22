@@ -65,15 +65,15 @@ const getInitialState = (variant: AnimationVariant) => {
     case "fadeIn":
       return { opacity: 0, y: 0, x: 0, scale: 1 };
     case "fadeInUp":
-      return { opacity: 0, y: 50, x: 0, scale: 1 };
+      return { opacity: 0, y: 20, x: 0, scale: 1 };
     case "fadeInLeft":
-      return { opacity: 0, y: 0, x: -50, scale: 1 };
+      return { opacity: 0, y: 0, x: -20, scale: 1 };
     case "fadeInRight":
-      return { opacity: 0, y: 0, x: 50, scale: 1 };
+      return { opacity: 0, y: 0, x: 20, scale: 1 };
     case "zoomIn":
-      return { opacity: 0, y: 0, x: 0, scale: 0.9 };
+      return { opacity: 0, y: 0, x: 0, scale: 0.95 };
     case "slideUp":
-      return { opacity: 0, y: 100, x: 0, scale: 1 };
+      return { opacity: 0, y: 30, x: 0, scale: 1 };
     default:
       return { opacity: 0, y: 0, x: 0, scale: 1 };
   }
@@ -83,14 +83,14 @@ export default function ScrollAnimation({
   children,
   variant = "fadeInUp",
   delay = 0,
-  duration = 0.5,
+  duration = 0.3,
   className = "",
   once = true,
   threshold = 0.2,
 }: ScrollAnimationProps) {
   const controls = useAnimation();
   const ref = useRef(null);
-  const inView = useInView(ref, { once });
+  const inView = useInView(ref, { once, threshold });
   const [initialState] = useState(getInitialState(variant));
 
   useEffect(() => {

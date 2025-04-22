@@ -32,12 +32,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
+    <html lang="es" className="h-full">
       <body
-        className={`${inter.variable} ${spaceGrotesk.variable} bg-gray-900 font-inter text-gray-100 tracking-tight`}
+        className={`${inter.variable} ${spaceGrotesk.variable} bg-gray-900 font-inter text-gray-100 tracking-tight h-full`}
       >
         <AnimationProvider>
-          <div className="flex min-h-screen flex-col overflow-hidden">
+          <div className="flex min-h-screen flex-col overflow-x-hidden">
             <Header />
             <main className="grow">{children}</main>
             <Footer />

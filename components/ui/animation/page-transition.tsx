@@ -10,9 +10,9 @@ interface PageTransitionProps {
 
 export default function PageTransition({ children, className = "" }: PageTransitionProps) {
   const variants = {
-    hidden: { opacity: 0, y: 10 },
+    hidden: { opacity: 0, y: 5 },
     enter: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -10 },
+    exit: { opacity: 0, y: -5 },
   };
 
   return (
@@ -26,7 +26,7 @@ export default function PageTransition({ children, className = "" }: PageTransit
         type: "spring",
         stiffness: 100,
         damping: 15,
-        duration: 0.2,
+        duration: 0.1,
       }}
     >
       {children}

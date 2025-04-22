@@ -31,22 +31,22 @@ export default function Features() {
         />
       </div>
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="border-t py-12 [border-image:linear-gradient(to_right,transparent,--theme(--color-slate-400/.25),transparent)1] md:py-20">
+        <div className="border-t py-8 [border-image:linear-gradient(to_right,transparent,--theme(--color-slate-400/.25),transparent)1] md:py-10">
           {/* Encabezado de sección */}
-          <div className="mx-auto max-w-3xl pb-4 text-center md:pb-12">
-            <div className="inline-flex items-center gap-3 pb-3 before:h-px before:w-8 before:bg-linear-to-r before:from-transparent before:to-indigo-200/50 after:h-px after:w-8 after:bg-linear-to-l after:from-transparent after:to-indigo-200/50">
+          <div className="mx-auto max-w-3xl pb-4 text-center md:pb-8">
+            <div className="inline-flex items-center gap-3 pb-2 before:h-px before:w-8 before:bg-linear-to-r before:from-transparent before:to-indigo-200/50 after:h-px after:w-8 after:bg-linear-to-l after:from-transparent after:to-indigo-200/50">
               <span className="inline-flex bg-linear-to-r from-indigo-500 to-indigo-200 bg-clip-text text-transparent">
                 Características Principales
               </span>
             </div>
-            <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-4 font-nacelle text-3xl font-semibold text-transparent md:text-4xl">
+            <h2 className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-3 font-nacelle text-3xl font-semibold text-transparent md:text-4xl">
               Diseñado para tu seguridad
             </h2>
             <p className="text-lg text-indigo-200/65">
             PASSWD. ofrece una solución completa para gestionar tus contraseñas con seguridad y facilidad de uso, protegiéndote contra accesos no autorizados.
             </p>
           </div>
-          <div className="flex justify-center pb-4 md:pb-12" data-aos="fade-up">
+          <div className="flex justify-center pb-4 md:pb-8" data-aos="fade-up">
             <Image
               className="max-w-none"
               src={FeaturesImage}
@@ -56,7 +56,7 @@ export default function Features() {
             />
           </div>
           {/* Elementos */}
-          <div className="mx-auto grid max-w-sm gap-12 sm:max-w-none sm:grid-cols-2 md:gap-x-14 md:gap-y-16 lg:grid-cols-3">
+          <div className="mx-auto grid max-w-sm gap-8 sm:max-w-none sm:grid-cols-2 md:gap-x-10 md:gap-y-12 lg:grid-cols-3">
             <article>
               <svg
                 className="mb-3 fill-indigo-500"

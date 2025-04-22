@@ -6,12 +6,12 @@ import Spotlight from "@/components/spotlight";
 
 export default function Workflows() {
   return (
-    <section>
+    <section className="pt-0">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="pb-12 md:pb-20">
+        <div className="pb-8 md:pb-10">
           {/* Encabezado de sección */}
-          <div className="mx-auto max-w-3xl pb-12 text-center md:pb-20">
-            <div className="inline-flex items-center gap-3 pb-3 before:h-px before:w-8 before:bg-linear-to-r before:from-transparent before:to-indigo-200/50 after:h-px after:w-8 after:bg-linear-to-l after:from-transparent after:to-indigo-200/50">
+          <div className="mx-auto max-w-3xl pb-4 text-center md:pb-6">
+            <div className="inline-flex items-center gap-3 pb-1 before:h-px before:w-8 before:bg-linear-to-r before:from-transparent before:to-indigo-200/50 after:h-px after:w-8 after:bg-linear-to-l after:from-transparent after:to-indigo-200/50">
               <span className="inline-flex bg-linear-to-r from-indigo-500 to-indigo-200 bg-clip-text text-transparent">
                 Cómo funciona
               </span>

@@ -16,11 +16,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(default)/page.js"
     ],
-    "/(auth)/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/layout.js"
-    ],
     "/passwords/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -31,26 +26,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/descargar/page.js"
     ],
-    "/(auth)/login/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/login/page.js"
-    ],
-    "/(auth)/registro/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/registro/page.js"
-    ],
-    "/(auth)/reset-password/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/(auth)/reset-password/page.js"
-    ],
-    "/perfil/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/perfil/page.js"
-    ],
     "/funciones/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -60,6 +35,26 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/precios/page.js"
+    ],
+    "/perfil/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/perfil/page.js"
+    ],
+    "/(auth)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/layout.js"
+    ],
+    "/(auth)/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/login/page.js"
+    ],
+    "/(auth)/registro/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/registro/page.js"
     ]
   }
 }
