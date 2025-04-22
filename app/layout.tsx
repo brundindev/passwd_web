@@ -1,7 +1,6 @@
 import "./css/style.css";
 
-import { Inter } from "next/font/google";
-import localFont from "next/font/local";
+import { Inter, Space_Grotesk } from "next/font/google";
 
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
@@ -13,8 +12,8 @@ const inter = Inter({
   display: "swap",
 });
 
-const nacelle = localFont({
-  src: "../../public/fonts/nacelle-regular.woff2",
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
   variable: "--font-nacelle",
   display: "swap",
 });
@@ -33,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${inter.variable} ${nacelle.variable} bg-gray-900 font-inter text-gray-100 tracking-tight`}
+        className={`${inter.variable} ${spaceGrotesk.variable} bg-gray-900 font-inter text-gray-100 tracking-tight`}
       >
         <div className="flex min-h-screen flex-col overflow-hidden">
           <Header />
