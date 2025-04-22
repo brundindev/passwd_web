@@ -1,27 +1,17 @@
-"use client";
-
-import { useEffect } from "react";
-
-import AOS from "aos";
-import "aos/dist/aos.css";
+import { metadata } from "./metadata";
+import ClientLayout from "./client-layout";
 
 export default function DefaultLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  useEffect(() => {
-    AOS.init({
-      once: true,
-      disable: "phone",
-      duration: 600,
-      easing: "ease-out-sine",
-    });
-  });
-
   return (
-    <>
-      <main className="relative flex grow flex-col">{children}</main>
-    </>
+    <ClientLayout>
+      <main className="relative flex flex-col">{children}</main>
+    </ClientLayout>
   );
 }
+
+// Re-exportamos los metadatos para que Next.js los reconozca
+export { metadata };

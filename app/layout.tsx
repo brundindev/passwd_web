@@ -5,6 +5,8 @@ import { Inter, Space_Grotesk } from "next/font/google";
 import Header from "@/components/ui/header";
 import Footer from "@/components/ui/footer";
 import ChatBot from "@/components/ui/chatbot/ChatBot";
+import AnimationProvider from "@/components/ui/animation/animation-provider";
+import CursorEffects from "@/components/ui/animation/cursor-effects";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -34,12 +36,15 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${spaceGrotesk.variable} bg-gray-900 font-inter text-gray-100 tracking-tight`}
       >
-        <div className="flex min-h-screen flex-col overflow-hidden">
-          <Header />
-          <main className="grow">{children}</main>
-          <Footer />
-          <ChatBot />
-        </div>
+        <AnimationProvider>
+          <div className="flex min-h-screen flex-col overflow-hidden">
+            <Header />
+            <main className="grow">{children}</main>
+            <Footer />
+            <ChatBot />
+          </div>
+          <CursorEffects />
+        </AnimationProvider>
       </body>
     </html>
   );

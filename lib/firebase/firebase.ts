@@ -47,7 +47,7 @@ export class AuthService {
   }
 
   // Registrarse con correo y contraseña
-  async registerWithEmailAndPassword(email: string, password: string) {
+  async registerWithEmailAndPassword(email: string, password: string, name?: string) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Usuario registrado correctamente:", userCredential.user.uid);
@@ -55,7 +55,7 @@ export class AuthService {
       // Guardar usuario en la base de datos
       try {
         await set(ref(database, `usuarios/${userCredential.user.uid}`), {
-          nombre: email.split('@')[0], // Nombre de usuario del correo
+          nombre: name || email.split('@')[0], // Nombre de usuario del correo o nombre proporcionado
           pass: '', // Campo vacío por seguridad
           registroCompletado: true,
           fechaRegistro: new Date().toISOString(),
@@ -70,6 +70,11 @@ export class AuthService {
       console.error("Error durante el registro:", error);
       throw this.handleAuthError(error);
     }
+  }
+
+  // Método alternativo para compatibilidad con el formulario de registro actualizado
+  async createUserWithEmailAndPassword(email: string, password: string) {
+    return this.registerWithEmailAndPassword(email, password);
   }
 
   // Iniciar sesión con Google

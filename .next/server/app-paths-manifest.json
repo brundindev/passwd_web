@@ -1,7 +1,9 @@
 {
-  "/descargar/page": "app/descargar/page.js",
-  "/profile/page": "app/profile/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/perfil/page": "app/perfil/page.js",
   "/passwords/page": "app/passwords/page.js",
-  "/(default)/page": "app/(default)/page.js",
-  "/(auth)/signin/page": "app/(auth)/signin/page.js"
+  "/precios/page": "app/precios/page.js",
+  "/funciones/page": "app/funciones/page.js",
+  "/descargar/page": "app/descargar/page.js",
+  "/(default)/page": "app/(default)/page.js"
 }

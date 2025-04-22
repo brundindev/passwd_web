@@ -6,16 +6,26 @@ import { useRouter } from "next/navigation";
 import { authService } from "@/lib/firebase/firebase";
 
 export default function SignUpForm() {
-  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Limpiar posibles errores de estado al montar el componente
+  // Comprobar si el usuario ya está autenticado
   useEffect(() => {
-    // Comprobar si hay error de estado en localStorage
+    const checkAuth = () => {
+      const user = authService.getCurrentUser();
+      if (user) {
+        // Si el usuario ya está autenticado, redirigir a la página principal
+        router.push("/");
+      }
+    };
+    
+    checkAuth();
+    
+    // Limpiar posibles errores de estado al montar el componente
     const hasStateError = localStorage.getItem("auth_state_error");
     if (hasStateError) {
       localStorage.removeItem("auth_state_error");
@@ -33,16 +43,20 @@ export default function SignUpForm() {
 
     try {
       // Validación básica
-      if (!name.trim() || !email.trim() || !password.trim()) {
+      if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
         throw new Error("Por favor, completa todos los campos");
+      }
+
+      if (password !== confirmPassword) {
+        throw new Error("Las contraseñas no coinciden");
       }
 
       if (password.length < 6) {
         throw new Error("La contraseña debe tener al menos 6 caracteres");
       }
 
-      // Registrar con Firebase
-      await authService.registerWithEmailAndPassword(email, password);
+      // Registrar usuario en Firebase
+      await authService.createUserWithEmailAndPassword(email, password);
       router.push("/"); // Redirigir a la página principal después del registro exitoso
 
     } catch (err: any) {
@@ -64,7 +78,7 @@ export default function SignUpForm() {
 
     try {
       await authService.signInWithGoogle();
-      router.push("/"); // Redirigir a la página principal después del registro exitoso
+      router.push("/"); // Redirigir a la página principal después del registro exitoso con Google
     } catch (err: any) {
       setError(err.message || "Error al registrarse con Google");
       console.error("Error de registro con Google:", err);
@@ -82,21 +96,6 @@ export default function SignUpForm() {
     <div>
       <form className="mt-8" onSubmit={handleSubmit}>
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-indigo-200/65" htmlFor="name">
-              Nombre
-            </label>
-            <input
-              id="name"
-              name="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full bg-gray-800/30 border border-gray-700 focus:border-indigo-500 focus:ring-indigo-500 placeholder-gray-500 py-3 px-4 rounded-full dark:text-white"
-              placeholder="Tu nombre"
-              required
-            />
-          </div>
           <div>
             <label className="block text-sm text-indigo-200/65" htmlFor="email">
               Correo electrónico
@@ -123,7 +122,22 @@ export default function SignUpForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-gray-800/30 border border-gray-700 focus:border-indigo-500 focus:ring-indigo-500 placeholder-gray-500 py-3 px-4 rounded-full dark:text-white"
-              placeholder="Mínimo 6 caracteres"
+              placeholder="******"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-indigo-200/65" htmlFor="confirm-password">
+              Confirmar contraseña
+            </label>
+            <input
+              id="confirm-password"
+              name="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className="w-full bg-gray-800/30 border border-gray-700 focus:border-indigo-500 focus:ring-indigo-500 placeholder-gray-500 py-3 px-4 rounded-full dark:text-white"
+              placeholder="******"
               required
             />
           </div>
@@ -152,13 +166,13 @@ export default function SignUpForm() {
             className="btn group w-full bg-linear-to-t from-indigo-600 to-indigo-500 text-white shadow-[inset_0px_1px_0px_--theme(--color-white/.16)] hover:bg-[length:100%_150%]"
           >
             <span className="relative inline-flex items-center">
-              {loading ? "Registrando..." : "Regístrate"}
+              {loading ? "Registrando..." : "Registrarse"}
             </span>
           </button>
         </div>
 
         <div className="text-center mt-6">
-          <div className="text-sm text-indigo-200/65 mb-4">o regístrate con</div>
+          <div className="text-sm text-indigo-200/65 mb-4">o registrarse con</div>
           <button
             type="button"
             onClick={handleGoogleSignUp}
@@ -190,7 +204,7 @@ export default function SignUpForm() {
         <div className="text-center mt-8">
           <div className="text-sm text-indigo-200/65">
             ¿Ya tienes una cuenta?{" "}
-            <Link href="/signin" className="text-indigo-500 hover:text-indigo-400">
+            <Link href="/login" className="text-indigo-500 hover:text-indigo-400">
               Inicia sesión
             </Link>
           </div>

@@ -12,9 +12,19 @@ export default function SignInForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // Limpiar posibles errores de estado al montar el componente
+  // Comprobar si el usuario ya está autenticado
   useEffect(() => {
-    // Comprobar si hay error de estado en localStorage
+    const checkAuth = () => {
+      const user = authService.getCurrentUser();
+      if (user) {
+        // Si el usuario ya está autenticado, redirigir a la página principal
+        router.push("/");
+      }
+    };
+    
+    checkAuth();
+    
+    // Limpiar posibles errores de estado al montar el componente
     const hasStateError = localStorage.getItem("auth_state_error");
     if (hasStateError) {
       localStorage.removeItem("auth_state_error");
@@ -170,7 +180,7 @@ export default function SignInForm() {
         <div className="text-center mt-8">
           <div className="text-sm text-indigo-200/65">
             ¿No tienes una cuenta?{" "}
-            <Link href="/signup" className="text-indigo-500 hover:text-indigo-400">
+            <Link href="/registro" className="text-indigo-500 hover:text-indigo-400">
               Regístrate
             </Link>
           </div>

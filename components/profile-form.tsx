@@ -27,8 +27,8 @@ export default function ProfileForm() {
         setEmail(currentUser.email || "");
         setLoading(false);
       } else {
-        // No hay usuario autenticado, redirigir a la página de inicio de sesión
-        router.push("/signin");
+        // Redirigir a inicio de sesión si no hay usuario
+        router.push("/login");
       }
     });
 
