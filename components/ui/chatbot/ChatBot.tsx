@@ -12,7 +12,13 @@ export default function ChatBot() {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isBrowser, setIsBrowser] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Verificar que estamos en el navegador al montar el componente
+  useEffect(() => {
+    setIsBrowser(true);
+  }, []);
   
   // Desplazarse al último mensaje cuando se añade uno nuevo
   useEffect(() => {
@@ -23,15 +29,18 @@ export default function ChatBot() {
 
   // Abrir el chat automáticamente después de 5 segundos en la primera visita
   useEffect(() => {
-    const hasOpenedChat = localStorage.getItem('hasOpenedChat');
-    
-    if (!hasOpenedChat) {
-      const timer = setTimeout(() => {
-        setIsOpen(true);
-        localStorage.setItem('hasOpenedChat', 'true');
-      }, 5000);
+    // Solo ejecutar en el navegador
+    if (typeof window !== 'undefined') {
+      const hasOpenedChat = localStorage.getItem('hasOpenedChat');
       
-      return () => clearTimeout(timer);
+      if (!hasOpenedChat) {
+        const timer = setTimeout(() => {
+          setIsOpen(true);
+          localStorage.setItem('hasOpenedChat', 'true');
+        }, 5000);
+        
+        return () => clearTimeout(timer);
+      }
     }
   }, []);
 
@@ -58,39 +67,50 @@ export default function ChatBot() {
     
     // Simular tiempo de respuesta
     setTimeout(async () => {
-      // Obtener respuesta del bot
-      const botResponse = await getBotResponse(userMessage);
-      
-      // Animación de escritura
-      setIsTyping(false);
-      
-      // Dividir la respuesta en caracteres para simular escritura
-      let response = "";
-      const fullResponse = botResponse;
-      
-      // Añadir caracteres uno a uno con un pequeño retraso
-      const typeWriter = (i = 0) => {
-        if (i < fullResponse.length) {
-          response += fullResponse.charAt(i);
-          setMessages(prev => {
-            const newMessages = [...prev];
-            // Si ya existe un mensaje del bot, actualizarlo
-            if (newMessages[newMessages.length - 1].sender === "bot") {
-              newMessages[newMessages.length - 1].text = response;
-            } else {
-              // Si no existe, crear uno nuevo
-              newMessages.push({ sender: "bot", text: response });
-            }
-            return newMessages;
-          });
-          setTimeout(() => typeWriter(i + 1), 20); // velocidad de escritura
-        }
-      };
-      
-      // Iniciar la animación de escritura
-      typeWriter();
+      try {
+        // Obtener respuesta del bot
+        const botResponse = await getBotResponse(userMessage);
+        
+        // Animación de escritura
+        setIsTyping(false);
+        
+        // Dividir la respuesta en caracteres para simular escritura
+        let response = "";
+        const fullResponse = botResponse;
+        
+        // Añadir caracteres uno a uno con un pequeño retraso
+        const typeWriter = (i = 0) => {
+          if (i < fullResponse.length) {
+            response += fullResponse.charAt(i);
+            setMessages(prev => {
+              const newMessages = [...prev];
+              // Si ya existe un mensaje del bot, actualizarlo
+              if (newMessages[newMessages.length - 1].sender === "bot") {
+                newMessages[newMessages.length - 1].text = response;
+              } else {
+                // Si no existe, crear uno nuevo
+                newMessages.push({ sender: "bot", text: response });
+              }
+              return newMessages;
+            });
+            setTimeout(() => typeWriter(i + 1), 20); // velocidad de escritura
+          }
+        };
+        
+        // Iniciar la animación de escritura
+        typeWriter();
+      } catch (error) {
+        console.error("Error al obtener respuesta:", error);
+        setIsTyping(false);
+        setMessages(prev => [...prev, { sender: "bot", text: "Lo siento, ha ocurrido un error al procesar tu consulta. Por favor, inténtalo de nuevo." }]);
+      }
     }, 1000); // Tiempo de "pensando"
   };
+
+  // Si no estamos en un navegador, no renderizar nada
+  if (!isBrowser) {
+    return null;
+  }
 
   return (
     <>

@@ -7,7 +7,7 @@ interface ChatWindowProps {
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleSubmit: (e: React.FormEvent) => void;
   isTyping: boolean;
-  messagesEndRef: RefObject<HTMLDivElement>;
+  messagesEndRef: RefObject<HTMLDivElement | null>;
 }
 
 // Preguntas preestablecidas que el usuario puede seleccionar
