@@ -90,7 +90,7 @@ export default function ScrollAnimation({
 }: ScrollAnimationProps) {
   const controls = useAnimation();
   const ref = useRef(null);
-  const inView = useInView(ref, { once, threshold });
+  const inView = useInView(ref, { once, amount: threshold });
   const [initialState] = useState(getInitialState(variant));
 
   useEffect(() => {
