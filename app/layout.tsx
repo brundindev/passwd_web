@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 const nacelle = localFont({
-  src: "../../public/fonts/nacelle-Regular.woff2",
+  src: "../../public/fonts/nacelle-regular.woff2",
   variable: "--font-nacelle",
   display: "swap",
 });
