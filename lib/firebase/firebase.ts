@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, setPersistence, browserLocalPersistence } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, setPersistence, browserLocalPersistence, sendEmailVerification, User } from 'firebase/auth';
 import { getDatabase, ref, set } from 'firebase/database';
 
 // Configuración de Firebase basada en la existente de tu proyecto Flutter
@@ -38,6 +38,13 @@ export class AuthService {
   async signInWithEmailAndPassword(email: string, password: string) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      // Verificar si el correo está verificado
+      if (!userCredential.user.emailVerified && userCredential.user.providerData[0].providerId === 'password') {
+        await signOut(auth);
+        throw new Error("Por favor, verifica tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.");
+      }
+      
       console.log("Inicio de sesión exitoso:", userCredential.user.uid);
       return userCredential;
     } catch (error) {
@@ -51,6 +58,9 @@ export class AuthService {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       console.log("Usuario registrado correctamente:", userCredential.user.uid);
+      
+      // Enviar correo de verificación
+      await this.sendEmailVerification(userCredential.user);
       
       // Guardar usuario en la base de datos
       try {
@@ -134,6 +144,22 @@ export class AuthService {
     }
   }
 
+  // Enviar correo de verificación
+  async sendEmailVerification(user: User) {
+    try {
+      await sendEmailVerification(user);
+      console.log("Correo de verificación enviado correctamente");
+    } catch (error) {
+      console.error("Error al enviar correo de verificación:", error);
+      throw this.handleAuthError(error);
+    }
+  }
+
+  // Comprobar si el correo está verificado
+  isEmailVerified(user: User | null): boolean {
+    return user?.emailVerified || false;
+  }
+
   // Manejo de errores de autenticación
   handleAuthError(error: any) {
     console.log("Error de autenticación:", error);
@@ -168,10 +194,11 @@ export class AuthService {
       'auth/popup-blocked': "El navegador ha bloqueado la ventana emergente. Permite las ventanas emergentes e inténtalo de nuevo.",
       'auth/unauthorized-domain': "Este dominio no está autorizado para operaciones OAuth. Contacta con el administrador.",
       'auth/timeout': "Se ha agotado el tiempo de espera para la operación. Comprueba tu conexión e inténtalo de nuevo.",
-      'auth/missing-initial-state': "Error de estado inicial. Por favor, limpia las cookies del navegador e inténtalo de nuevo. Si estás usando un bloqueador de rastreadores, desactívalo temporalmente para esta web."
+      'auth/missing-initial-state': "Error de estado inicial. Por favor, limpia las cookies del navegador e inténtalo de nuevo. Si estás usando un bloqueador de rastreadores, desactívalo temporalmente para esta web.",
+      'auth/email-not-verified': "Por favor, verifica tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada."
     };
     
-    return new Error(errorMessages[errorCode] || `Error de autenticación: ${error.message || error}. Por favor, inténtalo de nuevo.`);
+    return new Error(errorMessages[errorCode] || error.message || `Error de autenticación: ${error}. Por favor, inténtalo de nuevo.`);
   }
 }
 

@@ -4,13 +4,17 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authService } from "@/lib/firebase/firebase";
+import { getAuth, fetchSignInMethodsForEmail } from "firebase/auth";
 
 export default function SignInForm() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
   const router = useRouter();
+  const auth = getAuth();
 
   // Comprobar si el usuario ya está autenticado
   useEffect(() => {
@@ -39,6 +43,7 @@ export default function SignInForm() {
     e.preventDefault();
     setError("");
     setLoading(true);
+    setNeedsVerification(false);
 
     try {
       // Validación básica
@@ -54,10 +59,47 @@ export default function SignInForm() {
       setError(err.message || "Error al iniciar sesión");
       console.error("Error de inicio de sesión:", err);
       
+      // Verificar si es un error de correo no verificado
+      if (err.message && err.message.includes("verifica tu correo electrónico")) {
+        setNeedsVerification(true);
+      }
+      
       // Si es un error de estado, marcarlo para limpiarlo en la próxima carga
       if (err.code === 'auth/missing-initial-state') {
         localStorage.setItem("auth_state_error", "true");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setLoading(true);
+    setVerificationSent(false);
+    try {
+      // Primero verificamos que el email existe y usa autenticación con contraseña
+      const methods = await fetchSignInMethodsForEmail(auth, email);
+      
+      if (methods.includes('password')) {
+        // Iniciamos sesión temporalmente para obtener el usuario
+        const userCredential = await authService.signInWithEmailAndPassword(email, password);
+        
+        // Enviamos el correo de verificación nuevamente
+        await authService.sendEmailVerification(userCredential.user);
+        
+        // Cerramos sesión
+        await authService.signOut();
+        
+        setVerificationSent(true);
+        setError("");
+      } else {
+        throw new Error("Este correo no utiliza contraseña como método de inicio de sesión o no existe.");
+      }
+    } catch (err: any) {
+      if (!err.message.includes("verifica tu correo")) {
+        setError(err.message || "Error al reenviar el correo de verificación");
+      }
+      console.error("Error al reenviar verificación:", err);
     } finally {
       setLoading(false);
     }
@@ -132,6 +174,25 @@ export default function SignInForm() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+        
+        {verificationSent && (
+          <div className="mt-4 text-sm text-green-500 bg-green-100/10 p-3 rounded-lg">
+            Se ha enviado un nuevo correo de verificación. Por favor, revisa tu bandeja de entrada.
+          </div>
+        )}
+        
+        {needsVerification && !verificationSent && (
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={loading}
+              className="text-indigo-400 underline text-sm"
+            >
+              Reenviar correo de verificación
+            </button>
           </div>
         )}
 

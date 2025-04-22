@@ -10,6 +10,7 @@ export default function SignUpForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -39,6 +40,7 @@ export default function SignUpForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
@@ -57,7 +59,19 @@ export default function SignUpForm() {
 
       // Registrar usuario en Firebase
       await authService.createUserWithEmailAndPassword(email, password);
-      router.push("/"); // Redirigir a la página principal después del registro exitoso
+      
+      // Mostrar mensaje de éxito y no redirigir automáticamente
+      setSuccess("¡Registro exitoso! Se ha enviado un correo de verificación a tu dirección de email. Por favor, verifica tu correo electrónico para poder iniciar sesión.");
+      
+      // Limpiar formulario
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      
+      // Redirigir después de unos segundos
+      setTimeout(() => {
+        router.push("/login");
+      }, 5000);
 
     } catch (err: any) {
       setError(err.message || "Error al registrarse");
@@ -74,6 +88,7 @@ export default function SignUpForm() {
 
   const handleGoogleSignUp = async () => {
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
@@ -156,6 +171,12 @@ export default function SignUpForm() {
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {success && (
+          <div className="mt-4 text-sm text-green-500 bg-green-100/10 p-3 rounded-lg">
+            {success}
           </div>
         )}
 
