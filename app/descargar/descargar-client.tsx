@@ -183,7 +183,7 @@ export default function DescargarClient() {
               <div className="max-w-3xl mx-auto">
                 <h2 className="h3 mb-4 text-center">Notas de la versión</h2>
                 <div className="bg-gray-800 p-5 rounded">
-                  <h4 className="text-xl font-bold mb-3">Versión 1.0.0 (Actual)</h4>
+                  <h4 className="text-xl font-bold mb-3">Versión 1.0.1-c (Actual)</h4>
                   <ul className="text-gray-400 space-y-2">
                     <li>• Lanzamiento inicial de PASSWD</li>
                     <li>• Implementación del cifrado de extremo a extremo</li>

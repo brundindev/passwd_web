@@ -7,6 +7,7 @@ import Footer from "@/components/ui/footer";
 import ChatBot from "@/components/ui/chatbot/ChatBot";
 import AnimationProvider from "@/components/ui/animation/animation-provider";
 import CursorEffects from "@/components/ui/animation/cursor-effects";
+import AuthProvider from "@/lib/auth/auth-context";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -37,12 +38,14 @@ export default function RootLayout({
         className={`${inter.variable} ${spaceGrotesk.variable} bg-gray-900 font-inter text-gray-100 tracking-tight h-full`}
       >
         <AnimationProvider>
-          <div className="flex min-h-screen flex-col overflow-x-hidden">
-            <Header />
-            <main className="grow">{children}</main>
-            <Footer />
+          <AuthProvider>
+            <div className="flex min-h-screen flex-col overflow-x-hidden">
+              <Header />
+              <main className="grow">{children}</main>
+              <Footer />
+            </div>
             <ChatBot />
-          </div>
+          </AuthProvider>
           <CursorEffects />
         </AnimationProvider>
       </body>

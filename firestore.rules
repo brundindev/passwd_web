@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regla general: denegar acceso por defecto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+    
+    // Regla para la colección "usuarios"
+    match /usuarios/{userId} {
+      // Permitir lectura si el usuario está autenticado y es el propio usuario
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Permitir escritura si el usuario está autenticado, es el propio usuario y tiene email verificado
+      allow write: if request.auth != null && 
+                   request.auth.uid == userId && 
+                   request.auth.token.email_verified == true;
+      
+      // Los administradores pueden leer cualquier documento de usuario
+      allow read: if request.auth != null && 
+                  exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+                  get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
+      
+      // Permitir acceso a las subcolecciones del usuario
+      match /{subcollection}/{document} {
+        // El propio usuario puede leer sus subcolecciones
+        allow read: if request.auth != null && request.auth.uid == userId;
+        
+        // El propio usuario puede escribir en sus subcolecciones si tiene email verificado
+        allow write: if request.auth != null && 
+                     request.auth.uid == userId && 
+                     request.auth.token.email_verified == true;
+                     
+        // Los administradores pueden leer cualquier subcolección de cualquier usuario
+        allow read: if request.auth != null && 
+                    exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
+                    get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
+      }
+    }
+  }
+} 

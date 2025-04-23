@@ -16,31 +16,6 @@
       "static/chunks/main-app.js",
       "static/chunks/app/(default)/page.js"
     ],
-    "/passwords/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/passwords/page.js"
-    ],
-    "/descargar/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/descargar/page.js"
-    ],
-    "/funciones/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/funciones/page.js"
-    ],
-    "/precios/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/precios/page.js"
-    ],
-    "/perfil/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/perfil/page.js"
-    ],
     "/(auth)/layout": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -55,6 +30,51 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(auth)/registro/page.js"
+    ],
+    "/passwords/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/passwords/page.js"
+    ],
+    "/descargar/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/descargar/page.js"
+    ],
+    "/(auth)/reset-password/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/reset-password/page.js"
+    ],
+    "/cuenta/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/cuenta/page.js"
+    ],
+    "/funciones/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/funciones/page.js"
+    ],
+    "/precios/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/precios/page.js"
+    ],
+    "/terminos/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/terminos/page.js"
+    ],
+    "/privacidad/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/privacidad/page.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/_not-found/page.js"
     ]
   }
 }

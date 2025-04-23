@@ -1,7 +1,9 @@
 {
-  "/funciones/page": "app/funciones/page.js",
-  "/precios/page": "app/precios/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/passwords/page": "app/passwords/page.js",
+  "/terminos/page": "app/terminos/page.js",
   "/descargar/page": "app/descargar/page.js",
-  "/(default)/page": "app/(default)/page.js",
-  "/(auth)/registro/page": "app/(auth)/registro/page.js"
+  "/funciones/page": "app/funciones/page.js",
+  "/privacidad/page": "app/privacidad/page.js",
+  "/(default)/page": "app/(default)/page.js"
 }
