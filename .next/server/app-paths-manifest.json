@@ -1,9 +1,9 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/passwords/page": "app/passwords/page.js",
-  "/terminos/page": "app/terminos/page.js",
+  "/cuenta/page": "app/cuenta/page.js",
   "/descargar/page": "app/descargar/page.js",
-  "/funciones/page": "app/funciones/page.js",
-  "/privacidad/page": "app/privacidad/page.js",
-  "/(default)/page": "app/(default)/page.js"
+  "/passwords/page": "app/passwords/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(default)/page": "app/(default)/page.js",
+  "/(auth)/reset-password/page": "app/(auth)/reset-password/page.js"
 }

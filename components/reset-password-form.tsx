@@ -81,7 +81,7 @@ export default function ResetPasswordForm() {
 
         <div className="text-center mt-8">
           <div className="text-sm text-indigo-200/65">
-            <Link href="/signin" className="text-indigo-500 hover:text-indigo-400">
+            <Link href="/login" className="text-indigo-500 hover:text-indigo-400">
               Volver a iniciar sesión
             </Link>
           </div>
