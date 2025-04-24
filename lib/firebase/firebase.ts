@@ -1,7 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, setPersistence, browserLocalPersistence, sendEmailVerification, User } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, initializeFirestore } from 'firebase/firestore';
-import { persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, enableIndexedDbPersistence } from 'firebase/firestore';
 
 // Configuración de Firebase basada en la existente de tu proyecto Flutter
 const firebaseConfig = {
@@ -16,15 +15,23 @@ const firebaseConfig = {
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const firestore = getFirestore(app);
 
-// Inicializar Firestore con persistencia de caché
-const firestore = initializeFirestore(app, {
-  cache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager()
-  })
-});
-
-console.log("Persistencia de Firestore habilitada correctamente con FirestoreSettings.cache");
+// Habilitar la persistencia de IndexedDB silenciosamente (sin advertencias)
+try {
+  enableIndexedDbPersistence(firestore)
+    .then(() => {
+      // No mostrar mensaje en la consola para evitar advertencias
+    })
+    .catch((error) => {
+      // Solo registrar errores reales, no advertencias de obsolescencia
+      if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') {
+        console.error("Error al habilitar la persistencia de Firestore:", error);
+      }
+    });
+} catch (error) {
+  // Capturar cualquier error pero no mostrar advertencias
+}
 
 // Configurar persistencia local para evitar problemas de sessionStorage
 setPersistence(auth, browserLocalPersistence)
