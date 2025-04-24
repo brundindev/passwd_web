@@ -240,14 +240,14 @@ export class AuthService {
           console.log(`Encontrados ${passwordsSnap.size} documentos en estructura alternativa 1, migrando...`);
           
           // Migrar documentos a la estructura correcta
-          for (const doc of passwordsSnap.docs) {
-            const data = doc.data();
-            await setDoc(doc(passCollectionRef, doc.id), {
+          for (const docSnapshot of passwordsSnap.docs) {
+            const data = docSnapshot.data();
+            await setDoc(doc(passCollectionRef, docSnapshot.id), {
               ...data,
               migrado: true,
               fechaMigracion: new Date()
             });
-            console.log(`Migrado documento ${doc.id}`);
+            console.log(`Migrado documento ${docSnapshot.id}`);
           }
           
           console.log("Migración completada");
@@ -263,14 +263,14 @@ export class AuthService {
           console.log(`Encontrados ${userPasswordsSnap.size} documentos en estructura alternativa 2, migrando...`);
           
           // Migrar documentos a la estructura correcta
-          for (const doc of userPasswordsSnap.docs) {
-            const data = doc.data();
-            await setDoc(doc(passCollectionRef, doc.id), {
+          for (const docSnapshot of userPasswordsSnap.docs) {
+            const data = docSnapshot.data();
+            await setDoc(doc(passCollectionRef, docSnapshot.id), {
               ...data,
               migrado: true,
               fechaMigracion: new Date()
             });
-            console.log(`Migrado documento ${doc.id}`);
+            console.log(`Migrado documento ${docSnapshot.id}`);
           }
           
           console.log("Migración completada");
