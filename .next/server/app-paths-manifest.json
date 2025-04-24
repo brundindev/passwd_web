@@ -1,9 +1,4 @@
 {
-  "/_not-found/page": "app/_not-found/page.js",
-  "/cuenta/page": "app/cuenta/page.js",
-  "/descargar/page": "app/descargar/page.js",
   "/passwords/page": "app/passwords/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/(default)/page": "app/(default)/page.js",
-  "/(auth)/reset-password/page": "app/(auth)/reset-password/page.js"
+  "/(auth)/login/page": "app/(auth)/login/page.js"
 }

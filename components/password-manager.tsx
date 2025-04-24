@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { getFirestore, collection, getDocs, query, where, doc } from "firebase/firestore";
+import { getFirestore, collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 import { authService } from "@/lib/firebase/firebase";
 
 // Tipo para las contraseñas guardadas
@@ -40,67 +40,205 @@ export default function PasswordManager() {
   // Obtener las contraseñas del usuario al cargar la página
   useEffect(() => {
     let authCheckTimeout: NodeJS.Timeout;
-    const unsubscribe = authService.auth.onAuthStateChanged((currentUser) => {
+    console.log("Iniciando efecto para cargar contraseñas");
+    
+    const unsubscribe = authService.auth.onAuthStateChanged(async (currentUser) => {
+      console.log("Estado de autenticación actualizado:", currentUser ? "Usuario autenticado" : "Sin usuario");
       if (currentUser) {
-        // Usuario autenticado, cargar contraseñas
-        fetchPasswords(currentUser.uid);
+        // Usuario autenticado, verificar y reparar estructura de datos si es necesario
+        console.log("UID del usuario:", currentUser.uid);
+        
+        try {
+          console.log("Verificando estructura de datos del usuario...");
+          const repaired = await authService.verifyAndRepairUserData(currentUser.uid);
+          if (repaired) {
+            console.log("Se ha reparado la estructura de datos del usuario. Cargando contraseñas...");
+          }
+          // Intentar cargar contraseñas después de verificar/reparar
+          fetchPasswords(currentUser.uid);
+        } catch (error) {
+          console.error("Error al verificar/reparar datos:", error);
+          // Intentar cargar contraseñas de todos modos
+          fetchPasswords(currentUser.uid);
+        }
       } else {
         // Esperar un poco antes de redirigir por si es solo que está cargando
         authCheckTimeout = setTimeout(() => {
           // Verificar de nuevo si hay usuario
           const user = authService.auth.currentUser;
+          console.log("Recomprobando usuario después del timeout:", user ? "Usuario encontrado" : "Sin usuario");
           if (!user) {
             router.push("/login");
           } else {
-            fetchPasswords(user.uid);
+            // Usuario autenticado después del timeout, verificar y reparar
+            authService.verifyAndRepairUserData(user.uid)
+              .then(repaired => {
+                console.log("Resultado de verificación/reparación:", repaired ? "Reparado" : "No necesitaba reparación");
+                fetchPasswords(user.uid);
+              })
+              .catch(error => {
+                console.error("Error al verificar/reparar datos después del timeout:", error);
+                fetchPasswords(user.uid);
+              });
           }
         }, 1500); // Esperar 1.5 segundos
       }
     });
     
-    // Función para cargar contraseñas
-    const fetchPasswords = async (userId: string) => {
-      try {
-        setLoading(true);
-        const db = getFirestore();
-        // Acceder a la subcolección "pass" dentro del documento del usuario
-        const userDocRef = doc(db, "usuarios", userId);
-        const passwordsCollectionRef = collection(userDocRef, "pass");
-        
-        const querySnapshot = await getDocs(passwordsCollectionRef);
-        
-        const passwordsData: SavedPassword[] = [];
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          passwordsData.push({
-            id: doc.id,
-            sitio: data.sitio || data.website || "",
-            url: data.url || "",
-            usuario: data.usuario || data.username || "",
-            contrasena: data.contrasena || data.password || "",
-            fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
-            categoria: data.categoria || data.category || "",
-            notas: data.notas || data.notes || ""
-          });
-        });
-        
-        // Ordenar por fecha de creación, más reciente primero
-        passwordsData.sort((a, b) => b.fechaCreacion.getTime() - a.fechaCreacion.getTime());
-        
-        setPasswords(passwordsData);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error al cargar contraseñas:", error);
-        setError("No se pudieron cargar tus contraseñas. Por favor, inténtalo de nuevo más tarde.");
-        setLoading(false);
-      }
-    };
-    
     return () => {
+      console.log("Limpiando efecto");
       unsubscribe();
       if (authCheckTimeout) clearTimeout(authCheckTimeout);
     };
   }, [router]);
+
+  // Función para cargar contraseñas - Movida fuera del useEffect para poder reutilizarla
+  const fetchPasswords = async (userId: string) => {
+    try {
+      console.log("Iniciando carga de contraseñas para usuario:", userId);
+      setLoading(true);
+      setError(null);
+      const db = getFirestore();
+      
+      // Depuración: imprimir datos del usuario para confirmar autenticación
+      const user = authService.auth.currentUser;
+      console.log("Info del usuario actual:", {
+        uid: user?.uid,
+        email: user?.email,
+        emailVerified: user?.emailVerified,
+        isAnonymous: user?.isAnonymous,
+        providerData: user?.providerData
+      });
+      
+      // Intentar obtener el perfil del usuario para verificar que existe
+      const userProfile = await authService.getUserProfile(userId);
+      console.log("Perfil del usuario:", userProfile);
+      
+      // Acceder a la subcolección "pass" dentro del documento del usuario
+      const userDocRef = doc(db, "usuarios", userId);
+      const passwordsCollectionRef = collection(userDocRef, "pass");
+      
+      console.log("Obteniendo documentos de la colección 'pass'");
+      const querySnapshot = await getDocs(passwordsCollectionRef);
+      
+      console.log("Documentos recuperados:", querySnapshot.size);
+      
+      // Si no hay documentos en la subcolección 'pass', intentar buscar en otras colecciones posibles
+      if (querySnapshot.size === 0) {
+        console.log("No se encontraron contraseñas en la ruta principal. Intentando rutas alternativas...");
+        
+        // Probar ruta alternativa 1: colección "passwords" directamente
+        try {
+          console.log("Intentando ruta alternativa 1: colección 'passwords'");
+          const altPasswordsRef = collection(db, "passwords");
+          const altQuery = query(altPasswordsRef, where("userId", "==", userId));
+          const altSnapshot = await getDocs(altQuery);
+          
+          console.log("Documentos encontrados en ruta alternativa 1:", altSnapshot.size);
+          if (altSnapshot.size > 0) {
+            const passwordsData: SavedPassword[] = [];
+            altSnapshot.forEach((doc) => {
+              const data = doc.data();
+              console.log("Documento encontrado en ruta alternativa:", doc.id);
+              passwordsData.push({
+                id: doc.id,
+                sitio: data.sitio || data.website || "",
+                url: data.url || "",
+                usuario: data.usuario || data.username || "",
+                contrasena: data.contrasena || data.password || "",
+                fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+                categoria: data.categoria || data.category || "",
+                notas: data.notas || data.notes || ""
+              });
+            });
+            
+            passwordsData.sort((a, b) => b.fechaCreacion.getTime() - a.fechaCreacion.getTime());
+            console.log("Total de contraseñas cargadas (ruta alternativa 1):", passwordsData.length);
+            setPasswords(passwordsData);
+            setLoading(false);
+            return;
+          }
+        } catch (altError) {
+          console.error("Error al intentar ruta alternativa 1:", altError);
+        }
+        
+        // Probar ruta alternativa 2: colección "users" con subcolección "passwords"
+        try {
+          console.log("Intentando ruta alternativa 2: colección 'users' con subcolección 'passwords'");
+          const usersDocRef = doc(db, "users", userId);
+          const passwordsRef = collection(usersDocRef, "passwords");
+          const alt2Snapshot = await getDocs(passwordsRef);
+          
+          console.log("Documentos encontrados en ruta alternativa 2:", alt2Snapshot.size);
+          if (alt2Snapshot.size > 0) {
+            const passwordsData: SavedPassword[] = [];
+            alt2Snapshot.forEach((doc) => {
+              const data = doc.data();
+              console.log("Documento encontrado en ruta alternativa 2:", doc.id);
+              passwordsData.push({
+                id: doc.id,
+                sitio: data.sitio || data.website || "",
+                url: data.url || "",
+                usuario: data.usuario || data.username || "",
+                contrasena: data.contrasena || data.password || "",
+                fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+                categoria: data.categoria || data.category || "",
+                notas: data.notas || data.notes || ""
+              });
+            });
+            
+            passwordsData.sort((a, b) => b.fechaCreacion.getTime() - a.fechaCreacion.getTime());
+            console.log("Total de contraseñas cargadas (ruta alternativa 2):", passwordsData.length);
+            setPasswords(passwordsData);
+            setLoading(false);
+            return;
+          }
+        } catch (alt2Error) {
+          console.error("Error al intentar ruta alternativa 2:", alt2Error);
+        }
+        
+        // Si llegamos aquí, no se encontraron contraseñas en ninguna ruta
+        console.log("No se encontraron contraseñas en ninguna ruta. Posible problema con la estructura de datos o permisos.");
+      }
+      
+      const passwordsData: SavedPassword[] = [];
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        console.log("Documento encontrado:", doc.id, data);
+        passwordsData.push({
+          id: doc.id,
+          sitio: data.sitio || data.website || "",
+          url: data.url || "",
+          usuario: data.usuario || data.username || "",
+          contrasena: data.contrasena || data.password || "",
+          fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+          categoria: data.categoria || data.category || "",
+          notas: data.notas || data.notes || ""
+        });
+      });
+      
+      // Ordenar por fecha de creación, más reciente primero
+      passwordsData.sort((a, b) => b.fechaCreacion.getTime() - a.fechaCreacion.getTime());
+      
+      console.log("Total de contraseñas cargadas (ruta principal):", passwordsData.length);
+      setPasswords(passwordsData);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error al cargar contraseñas:", error);
+      
+      // Detallar más el error para diagnóstico
+      if (error instanceof Error) {
+        console.error("Detalles del error:", {
+          mensaje: error.message,
+          nombre: error.name,
+          stack: error.stack
+        });
+      }
+      
+      setError("No se pudieron cargar tus contraseñas. Por favor, inténtalo de nuevo más tarde.");
+      setLoading(false);
+    }
+  };
 
   // Toggle para mostrar/ocultar contraseña
   const togglePasswordVisibility = (id: string) => {
@@ -178,7 +316,7 @@ export default function PasswordManager() {
           </svg>
           <p className="text-red-500">{error}</p>
           <button 
-            className="mt-4 bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors"
+            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors mt-4"
             onClick={() => window.location.reload()}
           >
             Intentar de nuevo
@@ -220,9 +358,9 @@ export default function PasswordManager() {
           ))}
         </select>
       </div>
-
-      {/* Lista de contraseñas */}
-      {filteredPasswords.length === 0 ? (
+      
+      {/* Mensaje cuando no hay contraseñas */}
+      {filteredPasswords.length === 0 && (
         <div className="bg-gray-800/50 rounded-lg p-8 text-center border border-gray-700">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 mx-auto text-gray-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -231,10 +369,13 @@ export default function PasswordManager() {
           <p className="text-gray-400 mb-6">
             {searchTerm || selectedCategory !== "all" 
               ? "No hay resultados que coincidan con tu búsqueda. Intenta con otros términos."
-              : "Aún no tienes contraseñas guardadas."}
+              : "Aún no tienes contraseñas guardadas. Las contraseñas que guardes en la app aparecerán aquí."}
           </p>
         </div>
-      ) : (
+      )}
+
+      {/* Lista de contraseñas */}
+      {filteredPasswords.length > 0 && (
         <motion.div 
           className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
           variants={containerVariants}
@@ -268,77 +409,59 @@ export default function PasswordManager() {
               <div className="mt-4 space-y-3">
                 {/* URL */}
                 <div className="flex items-center">
-                  <span className="text-gray-500 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                    </svg>
-                  </span>
-                  <span className="text-sm text-gray-400 truncate">{password.url}</span>
-                  <button
-                    className="ml-auto text-gray-500 hover:text-indigo-400 transition-colors"
-                    onClick={() => copyToClipboard(password.url)}
-                    title="Copiar URL"
+                  <span className="text-gray-400 text-sm w-20">URL:</span>
+                  <a 
+                    href={password.url.startsWith('http') ? password.url : `https://${password.url}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-indigo-400 text-sm truncate hover:text-indigo-300 flex-1"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                    </svg>
-                  </button>
+                    {password.url}
+                  </a>
                 </div>
                 
                 {/* Usuario */}
-                <div className="flex items-center">
-                  <span className="text-gray-500 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </span>
-                  <span className="text-sm text-gray-400 truncate">{password.usuario}</span>
-                  <button
-                    className="ml-auto text-gray-500 hover:text-indigo-400 transition-colors"
+                <div className="flex items-center group relative">
+                  <span className="text-gray-400 text-sm w-20">Usuario:</span>
+                  <span className="text-white text-sm truncate flex-1">{password.usuario}</span>
+                  <button 
+                    className="ml-2 text-gray-500 hover:text-indigo-400 transition-colors opacity-0 group-hover:opacity-100"
                     onClick={() => copyToClipboard(password.usuario)}
                     title="Copiar usuario"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                     </svg>
                   </button>
                 </div>
                 
                 {/* Contraseña */}
-                <div className="flex items-center">
-                  <span className="text-gray-500 mr-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+                <div className="flex items-center group relative">
+                  <span className="text-gray-400 text-sm w-20">Contraseña:</span>
+                  <span className="text-white text-sm truncate flex-1 font-mono">
+                    {showPassword[password.id] ? password.contrasena : '••••••••••••'}
                   </span>
-                  <span className="text-sm text-gray-400 truncate font-mono">
-                    {showPassword[password.id] ? password.contrasena : '••••••••••'}
-                  </span>
-                  <div className="ml-auto flex">
-                    <button
-                      className="text-gray-500 hover:text-indigo-400 transition-colors mr-2"
+                  <div className="ml-2 flex opacity-0 group-hover:opacity-100">
+                    <button 
+                      className="text-gray-500 hover:text-indigo-400 transition-colors mr-1"
                       onClick={() => togglePasswordVisibility(password.id)}
-                      title={showPassword[password.id] ? "Ocultar" : "Mostrar"}
+                      title={showPassword[password.id] ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path 
-                          strokeLinecap="round" 
-                          strokeLinejoin="round" 
-                          strokeWidth={2} 
-                          d={showPassword[password.id] 
-                            ? "M3 3l18 18M10.94 6.08A6.93 6.93 0 0112 6c3.18 0 6.17 2.29 7.91 6a15.23 15.23 0 01-.9 1.64m-5.7-5.7a6.93 6.93 0 00-.94 3.49c0 1.57.53 3.01 1.41 4.17m2.24.21a6.95 6.95 0 01-3.06.75c-3.18 0-6.17-2.29-7.91-6 1.5-3.2 4.09-5.37 6.92-5.91"
-                            : "M12 4.5a7.5 7.5 0 00-7.5 7.5c0 1.21.23 2.35.64 3.4.4 1.03 1 1.97 1.74 2.78.73.82 1.61 1.47 2.57 1.91a7.47 7.47 0 005.1 0c.95-.44 1.84-1.09 2.57-1.91.74-.81 1.34-1.75 1.74-2.78.4-1.05.64-2.19.64-3.4 0-4.14-3.36-7.5-7.5-7.5zM12 9a3 3 0 110 6 3 3 0 010-6z"
-                          } 
-                        />
+                        {showPassword[password.id] ? (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        ) : (
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        )}
                       </svg>
                     </button>
-                    <button
+                    <button 
                       className="text-gray-500 hover:text-indigo-400 transition-colors"
                       onClick={() => copyToClipboard(password.contrasena)}
                       title="Copiar contraseña"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
                     </button>
                   </div>
@@ -346,10 +469,21 @@ export default function PasswordManager() {
                 
                 {/* Categoría */}
                 {password.categoria && (
-                  <div className="mt-2">
-                    <span className="inline-block bg-gray-700 text-gray-300 text-xs rounded-full px-3 py-1">
+                  <div className="flex items-center">
+                    <span className="text-gray-400 text-sm w-20">Categoría:</span>
+                    <span className="text-sm bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">
                       {password.categoria}
                     </span>
+                  </div>
+                )}
+                
+                {/* Notas */}
+                {password.notas && (
+                  <div className="mt-2">
+                    <span className="text-gray-400 text-sm block mb-1">Notas:</span>
+                    <p className="text-gray-300 text-sm bg-gray-800/70 p-2 rounded">
+                      {password.notas}
+                    </p>
                   </div>
                 )}
               </div>

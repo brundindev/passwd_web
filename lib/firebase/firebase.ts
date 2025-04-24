@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, setPersistence, browserLocalPersistence, sendEmailVerification, User } from 'firebase/auth';
-import { getFirestore, collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, initializeFirestore } from 'firebase/firestore';
+import { persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 
 // Configuración de Firebase basada en la existente de tu proyecto Flutter
 const firebaseConfig = {
@@ -15,7 +16,15 @@ const firebaseConfig = {
 // Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const firestore = getFirestore(app);
+
+// Inicializar Firestore con persistencia de caché
+const firestore = initializeFirestore(app, {
+  cache: persistentLocalCache({
+    tabManager: persistentMultipleTabManager()
+  })
+});
+
+console.log("Persistencia de Firestore habilitada correctamente con FirestoreSettings.cache");
 
 // Configurar persistencia local para evitar problemas de sessionStorage
 setPersistence(auth, browserLocalPersistence)
@@ -170,6 +179,112 @@ export class AuthService {
     } catch (error) {
       console.error("Error al obtener el perfil del usuario:", error);
       return null;
+    }
+  }
+
+  // Verificar y reparar la estructura de datos del usuario
+  async verifyAndRepairUserData(uid: string) {
+    try {
+      console.log("Verificando estructura de datos para usuario:", uid);
+      
+      // Verificar si existe el documento principal del usuario
+      const userDocRef = doc(firestore, "usuarios", uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      let needsRepair = false;
+      
+      if (!userDoc.exists()) {
+        console.log("El documento del usuario no existe, se necesita reparación");
+        needsRepair = true;
+        
+        // Obtener información del usuario de Auth
+        const user = this.getCurrentUser();
+        if (!user) {
+          throw new Error("No hay usuario autenticado para reparar datos");
+        }
+        
+        // Crear documento base
+        await setDoc(userDocRef, {
+          nombre: user.displayName || user.email?.split('@')[0] || 'Usuario',
+          email: user.email,
+          registroCompletado: true,
+          fechaRegistro: new Date().toISOString(),
+          metodoRegistro: user.providerData[0]?.providerId || 'unknown',
+          reparado: true
+        });
+        
+        console.log("Documento base de usuario creado");
+      }
+      
+      // Verificar la existencia de la subcolección 'pass'
+      const passCollectionRef = collection(userDocRef, "pass");
+      const passSnap = await getDocs(passCollectionRef);
+      
+      if (passSnap.empty) {
+        console.log("Subcolección 'pass' vacía, verificando estructuras alternativas");
+        
+        // Buscar en otras estructuras posibles y mover datos si es necesario
+        // Estructura 1: Colección directa "passwords"
+        const passwordsRef = collection(firestore, "passwords");
+        const passwordsQuery = query(passwordsRef, where("userId", "==", uid));
+        const passwordsSnap = await getDocs(passwordsQuery);
+        
+        if (!passwordsSnap.empty) {
+          console.log(`Encontrados ${passwordsSnap.size} documentos en estructura alternativa 1, migrando...`);
+          
+          // Migrar documentos a la estructura correcta
+          for (const doc of passwordsSnap.docs) {
+            const data = doc.data();
+            await setDoc(doc(passCollectionRef, doc.id), {
+              ...data,
+              migrado: true,
+              fechaMigracion: new Date()
+            });
+            console.log(`Migrado documento ${doc.id}`);
+          }
+          
+          console.log("Migración completada");
+          return true;
+        }
+        
+        // Estructura 2: Colección "users" con subcolección "passwords"
+        const usersDocRef = doc(firestore, "users", uid);
+        const userPasswordsRef = collection(usersDocRef, "passwords");
+        const userPasswordsSnap = await getDocs(userPasswordsRef);
+        
+        if (!userPasswordsSnap.empty) {
+          console.log(`Encontrados ${userPasswordsSnap.size} documentos en estructura alternativa 2, migrando...`);
+          
+          // Migrar documentos a la estructura correcta
+          for (const doc of userPasswordsSnap.docs) {
+            const data = doc.data();
+            await setDoc(doc(passCollectionRef, doc.id), {
+              ...data,
+              migrado: true,
+              fechaMigracion: new Date()
+            });
+            console.log(`Migrado documento ${doc.id}`);
+          }
+          
+          console.log("Migración completada");
+          return true;
+        }
+        
+        if (needsRepair) {
+          console.log("Se reparó la estructura pero no se encontraron contraseñas para migrar");
+          return true;
+        } else {
+          console.log("No se encontraron contraseñas en ninguna estructura alternativa");
+          return false;
+        }
+      } else {
+        console.log(`La subcolección 'pass' ya existe y contiene ${passSnap.size} documentos`);
+        return false; // No se necesitaba reparación
+      }
+      
+    } catch (error) {
+      console.error("Error al verificar/reparar estructura de datos:", error);
+      return false;
     }
   }
 
