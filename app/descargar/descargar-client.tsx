@@ -46,9 +46,9 @@ export default function DescargarClient() {
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">macOS</h4>
                     <p className="text-gray-400 text-center mb-4">v1.0.0</p>
-                    <Link href="#" className="btn-sm text-white bg-purple-600 hover:bg-purple-700 w-full text-center">
+                    <a href="/passwd%201.0.0.dmg" download className="btn-sm text-white bg-purple-600 hover:bg-purple-700 w-full text-center flex items-center justify-center">
                       Descargar para Mac
-                    </Link>
+                    </a>
                   </div>
 
                   {/* Windows */}
@@ -65,9 +65,13 @@ export default function DescargarClient() {
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">Windows</h4>
                     <p className="text-gray-400 text-center mb-4">v1.0.0</p>
-                    <Link href="#" className="btn-sm text-white bg-purple-600 hover:bg-purple-700 w-full text-center">
+                    <button 
+                      disabled
+                      title="Próximamente..."
+                      className="btn-sm text-white bg-purple-600/50 w-full text-center cursor-not-allowed opacity-70"
+                    >
                       Descargar para Windows
-                    </Link>
+                    </button>
                   </div>
 
                   {/* Linux */}
@@ -84,9 +88,13 @@ export default function DescargarClient() {
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">Linux</h4>
                     <p className="text-gray-400 text-center mb-4">v1.0.0</p>
-                    <Link href="#" className="btn-sm text-white bg-purple-600 hover:bg-purple-700 w-full text-center">
+                    <button 
+                      disabled
+                      title="Próximamente..."
+                      className="btn-sm text-white bg-purple-600/50 w-full text-center cursor-not-allowed opacity-70"
+                    >
                       Descargar para Linux
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -116,9 +124,12 @@ export default function DescargarClient() {
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">iOS</h4>
                     <p className="text-gray-400 text-center mb-4">iPhone y iPad</p>
-                    <Link href="#" className="btn-sm text-white bg-purple-600 hover:bg-purple-700 w-full text-center">
+                    <button
+                      title="Próximamente..."
+                      className="btn-sm text-white bg-purple-600/50 w-full text-center cursor-not-allowed opacity-70"
+                    >
                       Descargar en App Store
-                    </Link>
+                    </button>
                   </div>
 
                   {/* Android */}
@@ -135,9 +146,13 @@ export default function DescargarClient() {
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">Android</h4>
                     <p className="text-gray-400 text-center mb-4">Teléfonos y tablets</p>
-                    <Link href="#" className="btn-sm text-white bg-purple-600 hover:bg-purple-700 w-full text-center">
+                    <button 
+                      disabled
+                      title="Próximamente..."
+                      className="btn-sm text-white bg-purple-600/50 w-full text-center cursor-not-allowed opacity-70"
+                    >
                       Descargar en Google Play
-                    </Link>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -166,9 +181,9 @@ export default function DescargarClient() {
                       />
                     </div>
                     <h4 className="text-lg font-bold leading-snug tracking-tight mb-1">Chrome</h4>
-                    <Link href="#" className="btn-xs text-white bg-purple-600 hover:bg-purple-700 w-full text-center">
+                    <a href="/extension-passwd.zip" download className="btn-xs text-white bg-purple-600 hover:bg-purple-700 w-full text-center flex items-center justify-center">
                       Instalar
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -183,7 +198,7 @@ export default function DescargarClient() {
               <div className="max-w-3xl mx-auto">
                 <h2 className="h3 mb-4 text-center">Notas de la versión</h2>
                 <div className="bg-gray-800 p-5 rounded">
-                  <h4 className="text-xl font-bold mb-3">Versión 1.0.1-c (Actual)</h4>
+                  <h4 className="text-xl font-bold mb-3">Versión 1.0.2-a (Actual)</h4>
                   <ul className="text-gray-400 space-y-2">
                     <li>• Lanzamiento inicial de PASSWD</li>
                     <li>• Implementación del cifrado de extremo a extremo</li>
