@@ -315,12 +315,12 @@ export default function PasswordManager() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           <p className="text-red-500">{error}</p>
-          <button 
+            <button 
             className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-red-600 transition-colors mt-4"
-            onClick={() => window.location.reload()}
-          >
-            Intentar de nuevo
-          </button>
+              onClick={() => window.location.reload()}
+            >
+              Intentar de nuevo
+            </button>
         </div>
       </div>
     );
@@ -424,7 +424,7 @@ export default function PasswordManager() {
                 <div className="flex items-center group relative">
                   <span className="text-gray-400 text-sm w-20">Usuario:</span>
                   <span className="text-white text-sm truncate flex-1">{password.usuario}</span>
-                  <button 
+                  <button
                     className="ml-2 text-gray-500 hover:text-indigo-400 transition-colors opacity-0 group-hover:opacity-100"
                     onClick={() => copyToClipboard(password.usuario)}
                     title="Copiar usuario"
@@ -442,7 +442,7 @@ export default function PasswordManager() {
                     {showPassword[password.id] ? password.contrasena : '••••••••••••'}
                   </span>
                   <div className="ml-2 flex opacity-0 group-hover:opacity-100">
-                    <button 
+                    <button
                       className="text-gray-500 hover:text-indigo-400 transition-colors mr-1"
                       onClick={() => togglePasswordVisibility(password.id)}
                       title={showPassword[password.id] ? "Ocultar contraseña" : "Mostrar contraseña"}
@@ -455,7 +455,7 @@ export default function PasswordManager() {
                         )}
                       </svg>
                     </button>
-                    <button 
+                    <button
                       className="text-gray-500 hover:text-indigo-400 transition-colors"
                       onClick={() => copyToClipboard(password.contrasena)}
                       title="Copiar contraseña"
