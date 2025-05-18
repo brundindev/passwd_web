@@ -133,7 +133,7 @@ export default function Features() {
                 <path d="m16.321 2-.5-.866 1.733-1 .5.866A22 22 0 0 1 21 12c0 3.852-1.017 7.636-2.948 10.97l-.502.865-1.73-1.003.501-.865A19.878 19.878 0 0 0 19 12a20 20 0 0 0-2.679-10Z" />
               </svg>
               <h3 className="mb-1 font-nacelle text-[1rem] font-semibold text-gray-200">
-                Autenticación Biométrica
+                Autenticación Biométrica <span className="text-red-500 font-semibold">En desarrollo</span>
               </h3>
               <p className="text-indigo-200/65">
                 Accede a tu bóveda de contraseñas rápidamente con tu huella digital o reconocimiento facial, aumentando la seguridad.

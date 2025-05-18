@@ -61,7 +61,7 @@ export default function FuncionesClient() {
                         <div className="w-16 h-16 mb-4 rounded-full bg-blue-500 flex items-center justify-center">
                           <FiShield className="w-6 h-6 text-white" />
                         </div>
-                        <h4 className="h4 mb-2">Autenticación Biométrica</h4>
+                        <h4 className="h4 mb-2">Autenticación Biométrica <span className="text-red-500 font-semibold">En desarrollo</span></h4>
                         <p className="text-lg text-gray-400 text-center">
                           Accede rápidamente a tus contraseñas utilizando tu huella digital o reconocimiento facial.
                         </p>

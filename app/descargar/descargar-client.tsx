@@ -204,7 +204,7 @@ export default function DescargarClient() {
                     <li>• Implementación del cifrado de extremo a extremo</li>
                     <li>• Soporte para sincronización entre dispositivos</li>
                     <li>• Generador de contraseñas seguras</li>
-                    <li>• Autenticación biométrica en dispositivos compatibles</li>
+                    <li>• Autenticación biométrica en dispositivos compatibles <span className="text-red-500 font-semibold">En desarrollo</span></li>
                     <li>• Extensiones de navegador para autocompletado</li>
                   </ul>
                 </div>
@@ -222,7 +222,7 @@ export default function DescargarClient() {
               <div className="max-w-xs mx-auto sm:max-w-none sm:flex sm:justify-center">
                 <div>
                   <Link href="#" className="btn text-white bg-purple-600 hover:bg-purple-700 w-full mb-4 sm:w-auto sm:mb-0">
-                    Ver documentación
+                    Ver Precios
                   </Link>
                 </div>
                 <div>

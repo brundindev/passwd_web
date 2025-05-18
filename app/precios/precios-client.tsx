@@ -62,7 +62,7 @@ export default function PreciosClient() {
                   </div>
                   <div className="flex items-center mb-3">
                     <FiCheck className="w-5 h-5 text-green-500 mr-2" />
-                    <span className="text-gray-300">Autenticación biométrica</span>
+                    <span className="text-gray-300">Autenticación biométrica <span className="text-red-500 font-semibold">En desarrollo</span></span>
                   </div>
                   <div className="flex items-center mb-6">
                     <FiCheck className="w-5 h-5 text-green-500 mr-2" />

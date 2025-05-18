@@ -59,7 +59,7 @@ export default function FuncionesClient() {
                       </svg>
                     </div>
                   </div>
-                  <h4 className="h4 mb-2">Autenticación biométrica</h4>
+                  <h4 className="h4 mb-2">Autenticación biométrica <span className="text-red-500 font-semibold">En desarrollo</span></h4>
                   <p className="text-center text-lg text-gray-400">
                     Accede a tus contraseñas con tu huella digital o reconocimiento facial para mayor comodidad.
                   </p>

@@ -1,11 +1,30 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Logo from "./logo";
 import { motion } from "framer-motion";
 import ScrollAnimation from "./animation/scroll-animation";
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
 export default function Footer() {
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user && user.email === 'brundindev@gmail.com') {
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
+      setLoading(false);
+    });
+    
+    return () => unsubscribe();
+  }, []);
+
   return (
     <footer className="mt-8">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
@@ -43,6 +62,13 @@ export default function Footer() {
                     Contacto
                   </Link>
                 </motion.div>
+                {isAdmin && (
+                  <motion.div whileHover={{ y: -2 }} transition={{ duration: 0.2 }}>
+                    <Link href="/admin/tickets" className="text-sm text-purple-400 hover:text-purple-300 transition-colors duration-150">
+                      Panel Admin
+                    </Link>
+                  </motion.div>
+                )}
               </div>
             </div>
           </ScrollAnimation>

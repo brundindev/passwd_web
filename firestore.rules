@@ -37,5 +37,28 @@ service cloud.firestore {
                     get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
       }
     }
+    
+    // Reglas para la colección "tickets"
+    match /tickets/{ticketId} {
+      // Función para verificar si el usuario es administrador (por email)
+      function isAdmin() {
+        return request.auth != null && request.auth.token.email == 'brundindev@gmail.com';
+      }
+      
+      // Los usuarios pueden leer sus propios tickets
+      allow read: if request.auth != null && 
+                  resource.data.userId == request.auth.uid;
+      
+      // Los usuarios pueden crear tickets
+      allow create: if request.auth != null && 
+                    request.resource.data.userId == request.auth.uid;
+      
+      // Los usuarios pueden actualizar sus propios tickets (para añadir respuestas)
+      allow update: if request.auth != null && 
+                    resource.data.userId == request.auth.uid;
+      
+      // El administrador puede leer, actualizar y eliminar todos los tickets
+      allow read, update, delete: if isAdmin();
+    }
   }
 } 
