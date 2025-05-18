@@ -14,7 +14,7 @@ interface SavedPassword {
   usuario: string;
   contrasena: string;
   fechaCreacion: Date;
-  categoria?: string;
+  categoria?: string | string[];
   notas?: string;
 }
 
@@ -147,7 +147,7 @@ export default function PasswordManager() {
                 usuario: data.usuario || data.username || "",
                 contrasena: data.contrasena || data.password || "",
                 fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
-                categoria: data.categoria || data.category || "",
+                categoria: data.categoria || data.category || data.folderIds || "",
                 notas: data.notas || data.notes || ""
               });
             });
@@ -182,7 +182,7 @@ export default function PasswordManager() {
                 usuario: data.usuario || data.username || "",
                 contrasena: data.contrasena || data.password || "",
                 fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
-                categoria: data.categoria || data.category || "",
+                categoria: data.categoria || data.category || data.folderIds || "",
                 notas: data.notas || data.notes || ""
               });
             });
@@ -212,7 +212,7 @@ export default function PasswordManager() {
           usuario: data.usuario || data.username || "",
           contrasena: data.contrasena || data.password || "",
           fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
-          categoria: data.categoria || data.category || "",
+          categoria: data.categoria || data.category || data.folderIds || "",
           notas: data.notas || data.notes || ""
         });
       });
@@ -262,7 +262,11 @@ export default function PasswordManager() {
       password.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (password.notas?.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesCategory = selectedCategory === "all" || password.categoria === selectedCategory;
+    // Si selectedCategory es "all", o si la categoría coincide con selectedCategory
+    // Para manejar tanto string como array de folderIds
+    const matchesCategory = selectedCategory === "all" || 
+      password.categoria === selectedCategory ||
+      (Array.isArray(password.categoria) && password.categoria.includes(selectedCategory));
     
     return matchesSearch && matchesCategory;
   });
@@ -270,7 +274,13 @@ export default function PasswordManager() {
   // Obtener categorías/carpetas únicas de las contraseñas
   const categoriesSet = new Set<string>();
   passwords.forEach(p => {
-    if (p.categoria) categoriesSet.add(p.categoria);
+    if (typeof p.categoria === 'string' && p.categoria) {
+      categoriesSet.add(p.categoria);
+    } else if (Array.isArray(p.categoria)) {
+      p.categoria.forEach(cat => {
+        if (cat) categoriesSet.add(cat);
+      });
+    }
   });
   const categories = ["all", ...Array.from(categoriesSet).sort()];
 
@@ -510,13 +520,21 @@ export default function PasswordManager() {
                   <div className="flex items-center">
                     <span className="text-gray-400 text-sm w-20">Carpeta:</span>
                     <button 
-                      onClick={() => setSelectedCategory(password.categoria!)}
+                      onClick={() => {
+                        const categoryValue = Array.isArray(password.categoria) 
+                          ? password.categoria[0] 
+                          : password.categoria;
+                        
+                        if (categoryValue) {
+                          setSelectedCategory(categoryValue);
+                        }
+                      }}
                       className="text-sm bg-gray-700 hover:bg-indigo-600/30 text-gray-300 hover:text-indigo-300 px-2 py-0.5 rounded-full flex items-center transition-colors"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
                       </svg>
-                      {password.categoria}
+                      {Array.isArray(password.categoria) ? password.categoria[0] : password.categoria}
                     </button>
                   </div>
                 )}

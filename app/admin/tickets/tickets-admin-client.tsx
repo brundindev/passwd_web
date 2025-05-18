@@ -87,10 +87,8 @@ function LogsActivityComponent() {
         const db = getFirestore();
         const q = query(
           collection(db, "notifications"),
-          where("message", ">=", "[LOG]"),
-          orderBy("message"),
+          where("adminOnly", "==", true),
           orderBy("createdAt", "desc"),
-          where("adminOnly", "==", true)
         );
         
         const querySnapshot = await getDocs(q);
@@ -98,14 +96,16 @@ function LogsActivityComponent() {
         
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          logsData.push({
-            id: doc.id,
-            message: data.message,
-            createdAt: data.createdAt.toDate(),
-            createdBy: data.createdBy,
-            ticketId: data.ticketId,
-            type: data.type
-          });
+          if (data.message && data.message.startsWith('[LOG]')) {
+            logsData.push({
+              id: doc.id,
+              message: data.message,
+              createdAt: data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+              createdBy: data.createdBy,
+              ticketId: data.ticketId,
+              type: data.type
+            });
+          }
         });
         
         setLogs(logsData);
@@ -388,6 +388,23 @@ export default function TicketsAdminClient() {
         estado: 'cerrado'
       });
       
+      // Actualizar el estado local inmediatamente
+      const updatedTickets = tickets.map(ticket => 
+        ticket.id === selectedTicket 
+          ? { ...ticket, estado: 'cerrado' as 'cerrado' } 
+          : ticket
+      );
+      setTickets(updatedTickets);
+      
+      // Actualizar los tickets filtrados para reflejar el cambio
+      if (filter === 'todos') {
+        setFilteredTickets(updatedTickets);
+      } else {
+        setFilteredTickets(updatedTickets.filter(ticket => 
+          filter === 'abiertos' ? ticket.estado === 'abierto' : ticket.estado === 'cerrado'
+        ));
+      }
+      
       // Enviar notificación al usuario
       await notifyTicketClosed(selectedTicket, ticketActual.asunto, ticketActual.userId, user?.email || "Administrador");
       
@@ -396,8 +413,8 @@ export default function TicketsAdminClient() {
       
       setSuccess("Ticket cerrado correctamente");
       
-      // Actualizar la lista de tickets
-      await cargarTickets();
+      // Actualizar la lista de tickets en segundo plano
+      cargarTickets().catch(err => console.error("Error al recargar tickets:", err));
     } catch (error) {
       console.error("Error al cerrar ticket:", error);
       setError("No se pudo cerrar el ticket. Inténtalo de nuevo más tarde.");
@@ -425,6 +442,23 @@ export default function TicketsAdminClient() {
         estado: 'abierto'
       });
       
+      // Actualizar el estado local inmediatamente
+      const updatedTickets = tickets.map(ticket => 
+        ticket.id === selectedTicket 
+          ? { ...ticket, estado: 'abierto' as 'abierto' } 
+          : ticket
+      );
+      setTickets(updatedTickets);
+      
+      // Actualizar los tickets filtrados para reflejar el cambio
+      if (filter === 'todos') {
+        setFilteredTickets(updatedTickets);
+      } else {
+        setFilteredTickets(updatedTickets.filter(ticket => 
+          filter === 'abiertos' ? ticket.estado === 'abierto' : ticket.estado === 'cerrado'
+        ));
+      }
+      
       // Enviar notificación al usuario
       await notifyTicketReopened(selectedTicket, ticketActual.asunto, ticketActual.userId, user?.email || "Administrador");
       
@@ -433,8 +467,8 @@ export default function TicketsAdminClient() {
       
       setSuccess("Ticket reabierto correctamente");
       
-      // Actualizar la lista de tickets
-      await cargarTickets();
+      // Actualizar la lista de tickets en segundo plano
+      cargarTickets().catch(err => console.error("Error al recargar tickets:", err));
     } catch (error) {
       console.error("Error al reabrir ticket:", error);
       setError("No se pudo reabrir el ticket. Inténtalo de nuevo más tarde.");
