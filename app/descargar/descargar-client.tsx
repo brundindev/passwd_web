@@ -45,7 +45,7 @@ export default function DescargarClient() {
                       />
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">macOS</h4>
-                    <p className="text-gray-400 text-center mb-4">v1.0.0</p>
+                    <p className="text-gray-400 text-center mb-4">v1.0.2-a</p>
                     <a href="/passwd%201.0.0.dmg" download className="btn-sm text-white bg-purple-600 hover:bg-purple-700 w-full text-center flex items-center justify-center">
                       Descargar para Mac
                     </a>
