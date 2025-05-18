@@ -187,6 +187,24 @@ export default function PasswordManager() {
             altSnapshot.forEach((doc) => {
               const data = doc.data();
               console.log("Documento encontrado en ruta alternativa:", doc.id);
+              
+              // Manejar el caso donde folderIds es un array o un string único
+              let folderIdsArray: string[] = [];
+              if (data.folderIds) {
+                if (Array.isArray(data.folderIds)) {
+                  folderIdsArray = data.folderIds;
+                } else if (typeof data.folderIds === 'string') {
+                  folderIdsArray = [data.folderIds];
+                }
+              } else if (data.categoria || data.category) {
+                const categoriaData = data.categoria || data.category;
+                if (Array.isArray(categoriaData)) {
+                  folderIdsArray = categoriaData;
+                } else if (typeof categoriaData === 'string') {
+                  folderIdsArray = [categoriaData];
+                }
+              }
+              
               passwordsData.push({
                 id: doc.id,
                 sitio: data.sitio || data.website || "",
@@ -194,7 +212,7 @@ export default function PasswordManager() {
                 usuario: data.usuario || data.username || "",
                 contrasena: data.contrasena || data.password || "",
                 fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
-                categoria: data.categoria || data.category || data.folderIds || "",
+                categoria: folderIdsArray,
                 notas: data.notas || data.notes || ""
               });
             });
@@ -222,6 +240,24 @@ export default function PasswordManager() {
             alt2Snapshot.forEach((doc) => {
               const data = doc.data();
               console.log("Documento encontrado en ruta alternativa 2:", doc.id);
+              
+              // Manejar el caso donde folderIds es un array o un string único
+              let folderIdsArray: string[] = [];
+              if (data.folderIds) {
+                if (Array.isArray(data.folderIds)) {
+                  folderIdsArray = data.folderIds;
+                } else if (typeof data.folderIds === 'string') {
+                  folderIdsArray = [data.folderIds];
+                }
+              } else if (data.categoria || data.category) {
+                const categoriaData = data.categoria || data.category;
+                if (Array.isArray(categoriaData)) {
+                  folderIdsArray = categoriaData;
+                } else if (typeof categoriaData === 'string') {
+                  folderIdsArray = [categoriaData];
+                }
+              }
+              
               passwordsData.push({
                 id: doc.id,
                 sitio: data.sitio || data.website || "",
@@ -229,7 +265,7 @@ export default function PasswordManager() {
                 usuario: data.usuario || data.username || "",
                 contrasena: data.contrasena || data.password || "",
                 fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
-                categoria: data.categoria || data.category || data.folderIds || "",
+                categoria: folderIdsArray,
                 notas: data.notas || data.notes || ""
               });
             });
@@ -497,146 +533,132 @@ export default function PasswordManager() {
       {/* Lista de contraseñas */}
       {filteredPasswords.length > 0 && (
         <motion.div 
-          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3"
           variants={containerVariants}
           initial="hidden"
           animate="show"
+          className="grid grid-cols-1 gap-4"
         >
-          {filteredPasswords.map((password) => (
+          {filteredPasswords.map(password => (
             <motion.div 
-              key={password.id} 
-              className="bg-gray-800/50 rounded-lg p-4 border border-gray-700 transition-all hover:border-indigo-500/50 hover:bg-gray-800 group"
+              key={password.id}
               variants={itemVariants}
+              className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-indigo-500/50 transition-all shadow-lg"
             >
-              <div className="flex items-center mb-3">
-                <div className="h-10 w-10 flex-shrink-0 rounded-full bg-gray-700 overflow-hidden">
-                  <img 
-                    src={getFaviconUrl(password.url)}
-                    alt={password.sitio}
-                    className="h-full w-full object-cover"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = `https://ui-avatars.com/api/?name=${password.sitio.substring(0, 2)}&background=random`;
-                    }}
-                  />
-                </div>
-                <div className="ml-3 flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-white truncate">{password.sitio}</h3>
-                  <p className="text-sm text-gray-400 truncate">{password.usuario}</p>
-                </div>
-              </div>
-              
-              <div className="mt-4 space-y-3">
-                {/* URL */}
-                <div className="flex items-center">
-                  <span className="text-gray-400 text-sm w-20">URL:</span>
-                  <a 
-                    href={password.url.startsWith('http') ? password.url : `https://${password.url}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-indigo-400 text-sm truncate hover:text-indigo-300 flex-1"
-                  >
-                    {password.url}
-                  </a>
+              <div className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center">
+                    {password.url ? (
+                      <img 
+                        src={getFaviconUrl(password.url)} 
+                        alt={password.sitio}
+                        className="w-10 h-10 rounded mr-3 bg-white p-1"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src = `https://ui-avatars.com/api/?name=${password.sitio.substring(0, 2)}&background=random&size=60`;
+                        }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded mr-3 bg-indigo-600 flex items-center justify-center text-white font-bold">
+                        {password.sitio.substring(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">{password.sitio}</h3>
+                      <p className="text-gray-400 text-sm">{password.usuario}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    {/* Si tiene categoría/carpeta, mostrar etiqueta */}
+                    {Array.isArray(password.categoria) && password.categoria.length > 0 ? (
+                      <div className="flex space-x-1">
+                        {password.categoria.slice(0, 2).map((catId) => (
+                          <span 
+                            key={catId} 
+                            className="text-xs px-2 py-1 bg-indigo-900/30 text-indigo-300 rounded-full cursor-pointer hover:bg-indigo-800/40 transition-colors"
+                            onClick={() => setSelectedCategory(catId)}
+                          >
+                            {getFolderName(catId)}
+                          </span>
+                        ))}
+                        {password.categoria.length > 2 && (
+                          <span className="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">
+                            +{password.categoria.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      typeof password.categoria === 'string' && password.categoria && (
+                        <span 
+                          className="text-xs px-2 py-1 bg-indigo-900/30 text-indigo-300 rounded-full cursor-pointer hover:bg-indigo-800/40 transition-colors"
+                          onClick={() => setSelectedCategory(password.categoria as string)}
+                        >
+                          {getFolderName(password.categoria as string)}
+                        </span>
+                      )
+                    )}
+                  </div>
                 </div>
                 
-                {/* Usuario */}
-                <div className="flex items-center group relative">
-                  <span className="text-gray-400 text-sm w-20">Usuario:</span>
-                  <span className="text-white text-sm truncate flex-1">{password.usuario}</span>
-                  <button
-                    className="ml-2 text-gray-500 hover:text-indigo-400 transition-colors opacity-0 group-hover:opacity-100"
-                    onClick={() => copyToClipboard(password.usuario)}
-                    title="Copiar usuario"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                    </svg>
-                  </button>
-                </div>
+                {/* URL */}
+                {password.url && (
+                  <div className="mb-3">
+                    <p className="text-gray-400 text-sm mb-1 flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                      </svg>
+                      URL:
+                    </p>
+                    <a 
+                      href={password.url.startsWith('http') ? password.url : `https://${password.url}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-indigo-400 hover:text-indigo-300 transition-colors break-all"
+                    >
+                      {password.url}
+                    </a>
+                  </div>
+                )}
                 
                 {/* Contraseña */}
-                <div className="flex items-center group relative">
-                  <span className="text-gray-400 text-sm w-20">Contraseña:</span>
-                  <span className="text-white text-sm truncate flex-1 font-mono">
-                    {showPassword[password.id] ? password.contrasena : '••••••••••••'}
-                  </span>
-                  <div className="ml-2 flex opacity-0 group-hover:opacity-100">
-                    <button
-                      className="text-gray-500 hover:text-indigo-400 transition-colors mr-1"
+                <div className="mb-3">
+                  <p className="text-gray-400 text-sm mb-1 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Contraseña:
+                  </p>
+                  <div className="flex items-center">
+                    <span className="text-white font-mono bg-gray-700 p-2 rounded flex-1 break-all mr-2">
+                      {showPassword[password.id] ? password.contrasena : '••••••••••••'}
+                    </span>
+                    <button 
                       onClick={() => togglePasswordVisibility(password.id)}
-                      title={showPassword[password.id] ? "Ocultar contraseña" : "Mostrar contraseña"}
+                      className="p-2 text-gray-400 hover:text-white transition-colors"
+                      aria-label={showPassword[password.id] ? "Ocultar contraseña" : "Mostrar contraseña"}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        {showPassword[password.id] ? (
+                      {showPassword[password.id] ? (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                        ) : (
+                        </svg>
+                      ) : (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        )}
-                      </svg>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
                     </button>
-                    <button
-                      className="text-gray-500 hover:text-indigo-400 transition-colors"
+                    <button 
                       onClick={() => copyToClipboard(password.contrasena)}
-                      title="Copiar contraseña"
+                      className="p-2 text-gray-400 hover:text-white transition-colors"
+                      aria-label="Copiar contraseña"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
                       </svg>
                     </button>
                   </div>
                 </div>
-                
-                {/* Categoría/Carpeta */}
-                {password.categoria && (
-                  <div className="flex items-center">
-                    <span className="text-gray-400 text-sm w-20">Carpeta:</span>
-                    {typeof password.categoria === 'string' ? (
-                      <button 
-                        onClick={() => {
-                          if (password.categoria) {
-                            setSelectedCategory(password.categoria as string);
-                          }
-                        }}
-                        className="text-sm bg-gray-700 hover:bg-indigo-600/30 text-gray-300 hover:text-indigo-300 px-2 py-0.5 rounded-full flex items-center transition-colors"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                        </svg>
-                        {getFolderName(password.categoria as string)}
-                      </button>
-                    ) : Array.isArray(password.categoria) && password.categoria.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {password.categoria.map((catId, index) => (
-                          <button 
-                            key={index}
-                            onClick={() => {
-                              if (catId) {
-                                setSelectedCategory(catId);
-                              }
-                            }}
-                            className="text-sm bg-gray-700 hover:bg-indigo-600/30 text-gray-300 hover:text-indigo-300 px-2 py-0.5 rounded-full flex items-center transition-colors mb-1"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                            </svg>
-                            {getFolderName(catId)}
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                )}
-                
-                {/* Notas */}
-                {password.notas && (
-                  <div className="mt-2">
-                    <span className="text-gray-400 text-sm block mb-1">Notas:</span>
-                    <p className="text-gray-300 text-sm bg-gray-800/70 p-2 rounded">
-                      {password.notas}
-                    </p>
-                  </div>
-                )}
               </div>
             </motion.div>
           ))}
