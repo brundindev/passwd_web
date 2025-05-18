@@ -254,7 +254,7 @@ export default function PasswordManager() {
     // Aquí podrías añadir una notificación de que se ha copiado
   };
 
-  // Filtrar contraseñas basadas en la búsqueda y categoría
+  // Filtrar contraseñas basadas en la búsqueda y categoría/carpeta
   const filteredPasswords = passwords.filter(password => {
     const matchesSearch = 
       password.sitio.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -267,12 +267,12 @@ export default function PasswordManager() {
     return matchesSearch && matchesCategory;
   });
 
-  // Obtener categorías únicas de las contraseñas
+  // Obtener categorías/carpetas únicas de las contraseñas
   const categoriesSet = new Set<string>();
   passwords.forEach(p => {
     if (p.categoria) categoriesSet.add(p.categoria);
   });
-  const categories = ["all", ...Array.from(categoriesSet)];
+  const categories = ["all", ...Array.from(categoriesSet).sort()];
 
   // Variantes para animaciones
   const containerVariants = {
@@ -329,7 +329,8 @@ export default function PasswordManager() {
   return (
     <div>
       {/* Barra de búsqueda y filtros */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6">
+        {/* Barra de búsqueda */}
         <div className="relative flex-1">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -345,18 +346,42 @@ export default function PasswordManager() {
           />
         </div>
         
-        <select
-          className="bg-gray-800 text-white py-2 px-4 rounded-lg border border-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-        >
-          <option value="all">Todas las categorías</option>
-          {categories.filter(cat => cat !== "all").map((category, index) => (
-            <option key={index} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
+        {/* Selector de carpetas/categorías */}
+        <div className="mb-2">
+          <h3 className="text-gray-300 mb-2 font-semibold">Carpetas</h3>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setSelectedCategory("all")}
+              className={`px-3 py-1.5 rounded-lg flex items-center transition-colors ${
+                selectedCategory === "all" 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              </svg>
+              Todas
+            </button>
+            
+            {categories.filter(cat => cat !== "all").map((category, index) => (
+              <button
+                key={index}
+                onClick={() => setSelectedCategory(category)}
+                className={`px-3 py-1.5 rounded-lg flex items-center transition-colors ${
+                  selectedCategory === category 
+                    ? 'bg-indigo-600 text-white' 
+                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+                {category}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
       
       {/* Mensaje cuando no hay contraseñas */}
@@ -367,10 +392,23 @@ export default function PasswordManager() {
           </svg>
           <h3 className="text-xl font-semibold text-gray-200 mb-2">No se encontraron contraseñas</h3>
           <p className="text-gray-400 mb-6">
-            {searchTerm || selectedCategory !== "all" 
+            {searchTerm 
               ? "No hay resultados que coincidan con tu búsqueda. Intenta con otros términos."
-              : "Aún no tienes contraseñas guardadas. Las contraseñas que guardes en la app aparecerán aquí."}
+              : selectedCategory !== "all"
+                ? `No hay contraseñas en la carpeta "${selectedCategory}". Puedes añadir contraseñas a esta carpeta desde la opción "Añadir contraseña".`
+                : "Aún no tienes contraseñas guardadas. Las contraseñas que guardes en la app aparecerán aquí."}
           </p>
+        </div>
+      )}
+      
+      {/* Título para resultados filtrados */}
+      {filteredPasswords.length > 0 && selectedCategory !== "all" && (
+        <div className="mb-4 bg-gray-800/50 rounded-lg p-3 border border-gray-700 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          <span className="text-indigo-300 font-medium">{selectedCategory}</span>
+          <span className="text-gray-400 ml-2">({filteredPasswords.length} {filteredPasswords.length === 1 ? 'contraseña' : 'contraseñas'})</span>
         </div>
       )}
 
@@ -467,13 +505,19 @@ export default function PasswordManager() {
                   </div>
                 </div>
                 
-                {/* Categoría */}
+                {/* Categoría/Carpeta */}
                 {password.categoria && (
                   <div className="flex items-center">
-                    <span className="text-gray-400 text-sm w-20">Categoría:</span>
-                    <span className="text-sm bg-gray-700 text-gray-300 px-2 py-0.5 rounded-full">
+                    <span className="text-gray-400 text-sm w-20">Carpeta:</span>
+                    <button 
+                      onClick={() => setSelectedCategory(password.categoria!)}
+                      className="text-sm bg-gray-700 hover:bg-indigo-600/30 text-gray-300 hover:text-indigo-300 px-2 py-0.5 rounded-full flex items-center transition-colors"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                      </svg>
                       {password.categoria}
-                    </span>
+                    </button>
                   </div>
                 )}
                 

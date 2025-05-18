@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore';
 import { AuthService } from '@/lib/firebase/firebase';
 import PageTransition from '@/components/ui/animation/page-transition';
 import ScrollAnimation from '@/components/ui/animation/scroll-animation';
 import TicketItem from './ticket-item';
+import { notifyAdminNewTicket, notifyAdminTicketReplied, logTicketActivity } from '@/lib/firebase/notifications';
 
 // Definición de la interfaz para los tickets
 interface Ticket {
@@ -42,23 +43,30 @@ export default function ContactoClient() {
   const [success, setSuccess] = useState<string | null>(null);
   
   const router = useRouter();
+  const searchParams = useSearchParams();
   const auth = getAuth();
   const db = getFirestore();
   const authService = new AuthService();
 
-  // Comprobar el estado de autenticación
+  // Comprobar el estado de autenticación y cargar ticket específico si se proporciona en la URL
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user);
       setLoading(false);
       
       if (user) {
-        cargarTickets(user.uid);
+        cargarTickets(user.uid).then(() => {
+          // Verificar si hay un ticket específico en la URL
+          const ticketId = searchParams.get('ticket');
+          if (ticketId) {
+            setSelectedTicket(ticketId);
+          }
+        });
       }
     });
     
     return () => unsubscribe();
-  }, []);
+  }, [searchParams]);
 
   // Cargar los tickets del usuario actual
   const cargarTickets = async (userId: string) => {
@@ -291,7 +299,7 @@ export default function ContactoClient() {
                               >
                                 <div className="flex justify-between mb-1">
                                   <p className="text-sm font-medium">
-                                    {resp.isAdmin ? 'Soporte' : 'Tú'}
+                                    {resp.isAdmin ? 'Soporte' : resp.autor}
                                   </p>
                                   <p className="text-sm text-gray-400">
                                     {new Date(resp.createdAt).toLocaleString()}

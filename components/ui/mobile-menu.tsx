@@ -177,6 +177,30 @@ export default function MobileMenu({ isAuthenticated, userProfile, onLogout }: M
                       Mi Cuenta
                     </Link>
                   </motion.div>
+                  <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
+                    <Link 
+                      href="/contacto" 
+                      className={`flex items-center px-4 py-3 text-sm hover:bg-indigo-600/10 transition-colors duration-150 ${pathname === "/contacto" ? "text-indigo-400 bg-indigo-900/20" : "text-gray-300"}`}
+                    >
+                      <svg className="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                      </svg>
+                      Contacto
+                    </Link>
+                  </motion.div>
+                  {userProfile?.email === 'brundindev@gmail.com' && (
+                    <motion.div whileHover={{ x: 5 }} transition={{ duration: 0.2 }}>
+                      <Link 
+                        href="/admin/tickets" 
+                        className={`flex items-center px-4 py-3 text-sm hover:bg-purple-600/10 transition-colors duration-150 ${pathname === "/admin/tickets" ? "text-purple-400 bg-purple-900/20" : "text-gray-300"}`}
+                      >
+                        <svg className="w-5 h-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Panel de Administrador
+                      </Link>
+                    </motion.div>
+                  )}
                   <motion.div 
                     whileHover={{ x: 5, color: "#f87171" }} 
                     transition={{ duration: 0.2 }}
