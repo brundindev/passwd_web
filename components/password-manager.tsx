@@ -131,20 +131,54 @@ export default function PasswordManager() {
         };
         foldersData.push(folder);
         foldersMapData[doc.id] = folder;
+        console.log(`Carpeta cargada de Firestore - ID: "${doc.id}", Nombre: "${data.name || 'Sin nombre'}"`);
       });
+
+      // Intentar cargar carpetas específicas de usuario si existen
+      try {
+        const userFoldersQuery = query(collection(db, "usuarios", userId, "folders"));
+        const userFoldersSnapshot = await getDocs(userFoldersQuery);
+        
+        if (!userFoldersSnapshot.empty) {
+          userFoldersSnapshot.forEach((doc) => {
+            const data = doc.data();
+            const folder: Folder = {
+              id: doc.id,
+              name: data.name || "Sin nombre",
+              color: data.color,
+              description: data.description
+            };
+            foldersData.push(folder);
+            foldersMapData[doc.id] = folder;
+            console.log(`Carpeta de usuario cargada - ID: "${doc.id}", Nombre: "${data.name || 'Sin nombre'}"`);
+          });
+        }
+      } catch (userFoldersError) {
+        console.log("No se encontraron carpetas específicas del usuario:", userFoldersError);
+      }
 
       // Agregar categorías predefinidas si no existen
       const predefinedCategories = {
         "personal": "Personal",
+        "Personal": "Personal", 
         "work": "Trabajo",
+        "Work": "Trabajo",
         "finance": "Finanzas",
+        "Finance": "Finanzas",
         "social": "Redes Sociales",
+        "Social": "Redes Sociales",
         "entertainment": "Entretenimiento",
+        "Entertainment": "Entretenimiento",
         "education": "Educación",
+        "Education": "Educación",
         "shopping": "Compras",
+        "Shopping": "Compras",
         "travel": "Viajes",
+        "Travel": "Viajes",
         "health": "Salud",
-        "other": "Otros"
+        "Health": "Salud",
+        "other": "Otros",
+        "Other": "Otros"
       };
 
       for (const [id, name] of Object.entries(predefinedCategories)) {
@@ -152,10 +186,14 @@ export default function PasswordManager() {
           const folder: Folder = { id, name, color: "#6366f1" };
           foldersData.push(folder);
           foldersMapData[id] = folder;
+          console.log(`Añadida categoría predefinida - ID: "${id}", Nombre: "${name}"`);
         }
       }
       
-      console.log("Carpetas cargadas:", foldersData.length);
+      // Aquí añadimos registros a la consola para depuración
+      console.log("Total de carpetas cargadas:", foldersData.length);
+      console.log("Mapa de carpetas:", Object.keys(foldersMapData).map(key => `${key}: ${foldersMapData[key].name}`));
+      
       setFolders(foldersData);
       setFolderMap(foldersMapData);
     } catch (error) {
@@ -438,23 +476,67 @@ export default function PasswordManager() {
 
   // Obtener nombre de carpeta por ID
   const getFolderName = (folderId: string): string => {
-    // Categorías comunes predefinidas
+    // Protección contra undefined o null
+    if (!folderId) {
+      return "Sin categoría";
+    }
+    
+    // Imprimir información de depuración para entender qué está pasando
+    console.log(`Buscando nombre para folderId: "${folderId}"`, {
+      tipoFolderId: typeof folderId,
+      mapContainsFolderId: folderMap.hasOwnProperty(folderId),
+      foldersLength: folders.length,
+      folderMapSize: Object.keys(folderMap).length
+    });
+    
+    // Categorías comunes predefinidas (con variaciones de capitalización)
     const commonCategories: Record<string, string> = {
       "personal": "Personal",
+      "Personal": "Personal",
+      "PERSONAL": "Personal",
       "work": "Trabajo",
+      "Work": "Trabajo",
+      "WORK": "Trabajo",
+      "trabajo": "Trabajo",
+      "Trabajo": "Trabajo",
       "finance": "Finanzas",
+      "Finance": "Finanzas",
+      "finanzas": "Finanzas",
+      "Finanzas": "Finanzas",
       "social": "Redes Sociales",
+      "Social": "Redes Sociales",
+      "redes": "Redes Sociales",
+      "Redes": "Redes Sociales",
       "entertainment": "Entretenimiento",
+      "Entertainment": "Entretenimiento",
+      "entretenimiento": "Entretenimiento",
+      "Entretenimiento": "Entretenimiento",
       "education": "Educación",
+      "Education": "Educación",
+      "educacion": "Educación",
+      "Educacion": "Educación",
+      "Educación": "Educación",
       "shopping": "Compras",
+      "Shopping": "Compras",
+      "compras": "Compras",
+      "Compras": "Compras",
       "travel": "Viajes",
+      "Travel": "Viajes",
+      "viajes": "Viajes",
+      "Viajes": "Viajes",
       "health": "Salud",
-      "other": "Otros"
+      "Health": "Salud",
+      "salud": "Salud",
+      "Salud": "Salud",
+      "other": "Otros",
+      "Other": "Otros",
+      "otros": "Otros",
+      "Otros": "Otros"
     };
     
-    // Verificar si es una categoría común
-    if (commonCategories[folderId?.toLowerCase()]) {
-      return commonCategories[folderId.toLowerCase()];
+    // Verificar si es una categoría común (independiente de mayúsculas/minúsculas)
+    if (commonCategories[folderId]) {
+      return commonCategories[folderId];
     }
     
     // Verificar si existe en el mapa de carpetas
@@ -469,16 +551,20 @@ export default function PasswordManager() {
     }
     
     // Si no se encuentra pero es un ID válido, mostrar el ID como nombre
-    if (folderId && folderId.length > 0) {
+    if (folderId.length > 0) {
       // Intentar formatear el ID para que parezca un nombre
-      const formattedName = folderId
-        .replace(/-/g, ' ')
-        .replace(/_/g, ' ')
-        .split(' ')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-      
-      return formattedName;
+      try {
+        const formattedName = folderId
+          .replace(/-/g, ' ')
+          .replace(/_/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+          .join(' ');
+        
+        return formattedName;
+      } catch (error) {
+        console.error("Error al formatear ID de carpeta:", error);
+      }
     }
     
     // Valor por defecto
@@ -506,21 +592,27 @@ export default function PasswordManager() {
   const categoryInfo: Record<string, {id: string, name: string}> = {};
   passwords.forEach(p => {
     if (typeof p.categoria === 'string' && p.categoria) {
+      const folderName = getFolderName(p.categoria);
+      console.log(`Procesando categoría string: "${p.categoria}" → "${folderName}"`);
       categoryInfo[p.categoria] = {
         id: p.categoria,
-        name: getFolderName(p.categoria)
+        name: folderName
       };
     } else if (Array.isArray(p.categoria)) {
       p.categoria.forEach(cat => {
         if (cat) {
+          const folderName = getFolderName(cat);
+          console.log(`Procesando categoría array item: "${cat}" → "${folderName}"`);
           categoryInfo[cat] = {
             id: cat,
-            name: getFolderName(cat)
+            name: folderName
           };
         }
       });
     }
   });
+  
+  console.log("Información de categorías procesada:", categoryInfo);
   
   // Crear lista de categorías para mostrar en la UI
   const categories = [
@@ -717,36 +809,39 @@ export default function PasswordManager() {
                     </div>
                   </div>
                   
-                  <div className="flex space-x-2">
-                    {/* Si tiene categoría/carpeta, mostrar etiqueta */}
-                    {Array.isArray(password.categoria) && password.categoria.length > 0 ? (
-                      <div className="flex space-x-1">
-                        {password.categoria.slice(0, 2).map((catId) => (
-                          <span 
-                            key={catId} 
-                            className="text-xs px-2 py-1 bg-indigo-900/30 text-indigo-300 rounded-full cursor-pointer hover:bg-indigo-800/40 transition-colors"
-                            onClick={() => setSelectedCategory(catId)}
-                          >
-                            {getFolderName(catId)}
-                          </span>
-                        ))}
-                        {password.categoria.length > 2 && (
-                          <span className="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">
-                            +{password.categoria.length - 2}
-                          </span>
-                        )}
-                      </div>
-                    ) : (
-                      typeof password.categoria === 'string' && password.categoria && (
+                                    <div className="flex space-x-2">
+                {/* Si tiene categoría/carpeta, mostrar etiqueta */}
+                {Array.isArray(password.categoria) && password.categoria.length > 0 ? (
+                  <div className="flex space-x-1">
+                    {password.categoria.slice(0, 2).map((catId) => {
+                      console.log("Carpeta ID:", catId, "Nombre:", getFolderName(catId));
+                      return (
                         <span 
+                          key={catId} 
                           className="text-xs px-2 py-1 bg-indigo-900/30 text-indigo-300 rounded-full cursor-pointer hover:bg-indigo-800/40 transition-colors"
-                          onClick={() => setSelectedCategory(password.categoria as string)}
+                          onClick={() => setSelectedCategory(catId)}
                         >
-                          {getFolderName(password.categoria as string)}
+                          {getFolderName(catId) || catId}
                         </span>
-                      )
+                      );
+                    })}
+                    {password.categoria.length > 2 && (
+                      <span className="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-full">
+                        +{password.categoria.length - 2}
+                      </span>
                     )}
                   </div>
+                ) : (
+                  typeof password.categoria === 'string' && password.categoria && (
+                    <span 
+                      className="text-xs px-2 py-1 bg-indigo-900/30 text-indigo-300 rounded-full cursor-pointer hover:bg-indigo-800/40 transition-colors"
+                      onClick={() => setSelectedCategory(password.categoria as string)}
+                    >
+                      {getFolderName(password.categoria as string) || password.categoria}
+                    </span>
+                  )
+                )}
+              </div>
                 </div>
                 
                 {/* URL */}
@@ -847,15 +942,15 @@ export default function PasswordManager() {
                     <span className="text-gray-400 mr-1">Creada:</span>
                     <span className="text-gray-300">{formatDate(password.fechaCreacion)}</span>
                   </div>
-                  {password.fechaModificacion && (
-                    <div className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      <span className="text-gray-400 mr-1">Última modificación:</span>
-                      <span className="text-gray-300">{formatDate(password.fechaModificacion)}</span>
-                    </div>
-                  )}
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    <span className="text-gray-400 mr-1">Última modificación:</span>
+                    <span className="text-gray-300">
+                      {password.fechaModificacion ? formatDate(password.fechaModificacion) : "No modificada"}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -869,20 +964,7 @@ export default function PasswordManager() {
                       </div>
                     )}
 
-                    {/* Acciones adicionales */}
-                    <div className="flex justify-end mt-3">
-                      <button
-                        onClick={() => router.push(`/gestionar-contraseñas/editar?id=${password.id}`)}
-                        className="px-3 py-1 text-sm bg-indigo-700 hover:bg-indigo-600 text-white rounded-md transition-colors mr-2"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        className="px-3 py-1 text-sm bg-red-700 hover:bg-red-600 text-white rounded-md transition-colors"
-                      >
-                        Eliminar
-                      </button>
-                    </div>
+                    
                   </div>
                 )}
               </div>
