@@ -14,11 +14,9 @@ interface SavedPassword {
   usuario: string;
   contrasena: string;
   fechaCreacion: Date;
-  fechaModificacion?: Date;
+  fechaModificacion?: Date | null;
   categoria?: string | string[];
   notas?: string;
-  color?: string;
-  fortaleza?: number;
 }
 
 // Tipo para las carpetas
@@ -38,6 +36,7 @@ export default function PasswordManager() {
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [expandedPasswords, setExpandedPasswords] = useState<Record<string, boolean>>({});
   const router = useRouter();
 
   // Constantes para obtener logos de sitios web
@@ -124,7 +123,6 @@ export default function PasswordManager() {
       
       foldersSnapshot.forEach((doc) => {
         const data = doc.data();
-        console.log("Carpeta encontrada:", doc.id, data);
         const folder: Folder = {
           id: doc.id,
           name: data.name || "Sin nombre",
@@ -134,9 +132,30 @@ export default function PasswordManager() {
         foldersData.push(folder);
         foldersMapData[doc.id] = folder;
       });
+
+      // Agregar categorías predefinidas si no existen
+      const predefinedCategories = {
+        "personal": "Personal",
+        "work": "Trabajo",
+        "finance": "Finanzas",
+        "social": "Redes Sociales",
+        "entertainment": "Entretenimiento",
+        "education": "Educación",
+        "shopping": "Compras",
+        "travel": "Viajes",
+        "health": "Salud",
+        "other": "Otros"
+      };
+
+      for (const [id, name] of Object.entries(predefinedCategories)) {
+        if (!foldersMapData[id]) {
+          const folder: Folder = { id, name, color: "#6366f1" };
+          foldersData.push(folder);
+          foldersMapData[id] = folder;
+        }
+      }
       
       console.log("Carpetas cargadas:", foldersData.length);
-      console.log("Contenido del mapa de carpetas:", foldersMapData);
       setFolders(foldersData);
       setFolderMap(foldersMapData);
     } catch (error) {
@@ -193,7 +212,7 @@ export default function PasswordManager() {
               const data = doc.data();
               console.log("Documento encontrado en ruta alternativa:", doc.id);
               
-              // Manejar el caso donde folderIds es un array o un string único
+              // Manejar el caso donde folderIds/categoria es un array o un string único
               let folderIdsArray: string[] = [];
               if (data.folderIds) {
                 if (Array.isArray(data.folderIds)) {
@@ -210,15 +229,36 @@ export default function PasswordManager() {
                 }
               }
               
+              // Normalizar las fechas
+              let fechaCreacion;
+              if (data.fechaCreacion) {
+                fechaCreacion = data.fechaCreacion.toDate ? data.fechaCreacion.toDate() : new Date(data.fechaCreacion);
+              } else if (data.createdAt) {
+                fechaCreacion = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+              } else {
+                fechaCreacion = new Date();
+              }
+              
+              // Normalizar las modificaciones
+              let fechaModificacion;
+              if (data.fechaModificacion) {
+                fechaModificacion = data.fechaModificacion.toDate ? data.fechaModificacion.toDate() : new Date(data.fechaModificacion);
+              } else if (data.updatedAt) {
+                fechaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+              } else {
+                fechaModificacion = null;
+              }
+              
               passwordsData.push({
                 id: doc.id,
-                sitio: data.sitio || data.website || "",
-                url: data.url || "",
-                usuario: data.usuario || data.username || "",
-                contrasena: data.contrasena || data.password || "",
-                fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+                sitio: data.sitio || data.website || data.name || "",
+                url: data.url || data.website || "",
+                usuario: data.usuario || data.username || data.user || "",
+                contrasena: data.contrasena || data.password || data.pass || "",
+                fechaCreacion: fechaCreacion,
+                fechaModificacion: fechaModificacion,
                 categoria: folderIdsArray,
-                notas: data.notas || data.notes || ""
+                notas: data.notas || data.notes || data.description || ""
               });
             });
             
@@ -246,7 +286,7 @@ export default function PasswordManager() {
               const data = doc.data();
               console.log("Documento encontrado en ruta alternativa 2:", doc.id);
               
-              // Manejar el caso donde folderIds es un array o un string único
+              // Manejar el caso donde folderIds/categoria es un array o un string único
               let folderIdsArray: string[] = [];
               if (data.folderIds) {
                 if (Array.isArray(data.folderIds)) {
@@ -263,15 +303,36 @@ export default function PasswordManager() {
                 }
               }
               
+              // Normalizar las fechas
+              let fechaCreacion;
+              if (data.fechaCreacion) {
+                fechaCreacion = data.fechaCreacion.toDate ? data.fechaCreacion.toDate() : new Date(data.fechaCreacion);
+              } else if (data.createdAt) {
+                fechaCreacion = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+              } else {
+                fechaCreacion = new Date();
+              }
+              
+              // Normalizar las modificaciones
+              let fechaModificacion;
+              if (data.fechaModificacion) {
+                fechaModificacion = data.fechaModificacion.toDate ? data.fechaModificacion.toDate() : new Date(data.fechaModificacion);
+              } else if (data.updatedAt) {
+                fechaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+              } else {
+                fechaModificacion = null;
+              }
+              
               passwordsData.push({
                 id: doc.id,
-                sitio: data.sitio || data.website || "",
-                url: data.url || "",
-                usuario: data.usuario || data.username || "",
-                contrasena: data.contrasena || data.password || "",
-                fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
+                sitio: data.sitio || data.website || data.name || "",
+                url: data.url || data.website || "",
+                usuario: data.usuario || data.username || data.user || "",
+                contrasena: data.contrasena || data.password || data.pass || "",
+                fechaCreacion: fechaCreacion,
+                fechaModificacion: fechaModificacion,
                 categoria: folderIdsArray,
-                notas: data.notas || data.notes || ""
+                notas: data.notas || data.notes || data.description || ""
               });
             });
             
@@ -293,15 +354,48 @@ export default function PasswordManager() {
       querySnapshot.forEach((doc) => {
         const data = doc.data();
         console.log("Documento encontrado:", doc.id, data);
+        
+        // Manejar el caso donde categoria/folderIds es un array o un string único
+        let categoriaArray: string[] = [];
+        if (data.categoria || data.category || data.folderIds) {
+          const catData = data.categoria || data.category || data.folderIds;
+          if (Array.isArray(catData)) {
+            categoriaArray = catData;
+          } else if (typeof catData === 'string') {
+            categoriaArray = [catData];
+          }
+        }
+        
+        // Normalizar las fechas
+        let fechaCreacion;
+        if (data.fechaCreacion) {
+          fechaCreacion = data.fechaCreacion.toDate ? data.fechaCreacion.toDate() : new Date(data.fechaCreacion);
+        } else if (data.createdAt) {
+          fechaCreacion = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+        } else {
+          fechaCreacion = new Date();
+        }
+        
+        // Normalizar las modificaciones
+        let fechaModificacion;
+        if (data.fechaModificacion) {
+          fechaModificacion = data.fechaModificacion.toDate ? data.fechaModificacion.toDate() : new Date(data.fechaModificacion);
+        } else if (data.updatedAt) {
+          fechaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+        } else {
+          fechaModificacion = null;
+        }
+        
         passwordsData.push({
           id: doc.id,
-          sitio: data.sitio || data.website || "",
-          url: data.url || "",
-          usuario: data.usuario || data.username || "",
-          contrasena: data.contrasena || data.password || "",
-          fechaCreacion: data.fechaCreacion?.toDate() || new Date(),
-          categoria: data.categoria || data.category || data.folderIds || "",
-          notas: data.notas || data.notes || ""
+          sitio: data.sitio || data.website || data.name || "",
+          url: data.url || data.website || "",
+          usuario: data.usuario || data.username || data.user || "",
+          contrasena: data.contrasena || data.password || data.pass || "",
+          fechaCreacion: fechaCreacion,
+          fechaModificacion: fechaModificacion,
+          categoria: categoriaArray.length > 0 ? categoriaArray : "",
+          notas: data.notas || data.notes || data.description || ""
         });
       });
       
@@ -344,45 +438,51 @@ export default function PasswordManager() {
 
   // Obtener nombre de carpeta por ID
   const getFolderName = (folderId: string): string => {
-    console.log(`Intentando obtener nombre para folderId: ${folderId}`);
-    console.log("Estado actual del folderMap:", folderMap);
+    // Categorías comunes predefinidas
+    const commonCategories: Record<string, string> = {
+      "personal": "Personal",
+      "work": "Trabajo",
+      "finance": "Finanzas",
+      "social": "Redes Sociales",
+      "entertainment": "Entretenimiento",
+      "education": "Educación",
+      "shopping": "Compras",
+      "travel": "Viajes",
+      "health": "Salud",
+      "other": "Otros"
+    };
+    
+    // Verificar si es una categoría común
+    if (commonCategories[folderId?.toLowerCase()]) {
+      return commonCategories[folderId.toLowerCase()];
+    }
     
     // Verificar si existe en el mapa de carpetas
     if (folderMap[folderId] && folderMap[folderId].name) {
-      console.log(`Nombre encontrado en el mapa: ${folderMap[folderId].name}`);
       return folderMap[folderId].name;
     }
     
     // Buscar en el array de carpetas en caso de que el mapa no esté actualizado
     const folder = folders.find(f => f.id === folderId);
     if (folder && folder.name) {
-      console.log(`Nombre encontrado en el array: ${folder.name}`);
       return folder.name;
     }
     
-    // Si no se encuentra pero es un ID válido, mostrar "Carpeta sin nombre"
+    // Si no se encuentra pero es un ID válido, mostrar el ID como nombre
     if (folderId && folderId.length > 0) {
-      console.log(`No se encontró nombre para folderId: ${folderId}`);
-      return "Carpeta sin nombre";
+      // Intentar formatear el ID para que parezca un nombre
+      const formattedName = folderId
+        .replace(/-/g, ' ')
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+      
+      return formattedName;
     }
     
     // Valor por defecto
-    console.log("ID de carpeta vacío, retornando 'Sin carpeta'");
-    return "Sin carpeta";
-  };
-
-  // Formatear fecha para mostrar de forma amigable
-  const formatDate = (date: Date | undefined): string => {
-    if (!date) return "Fecha desconocida";
-    
-    // Formatear fecha en formato local
-    return new Intl.DateTimeFormat('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+    return "Sin categoría";
   };
 
   // Filtrar contraseñas basadas en la búsqueda y categoría/carpeta
@@ -450,6 +550,29 @@ export default function PasswordManager() {
         damping: 20 
       }
     }
+  };
+
+  // Función para expandir/colapsar detalles de una contraseña
+  const togglePasswordDetails = (id: string) => {
+    setExpandedPasswords(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
+  // Formatear fecha para mostrar
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return "Fecha desconocida";
+    
+    const options: Intl.DateTimeFormatOptions = {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    };
+    
+    return new Intl.DateTimeFormat("es-ES", options).format(date);
   };
 
   if (loading) {
@@ -685,60 +808,83 @@ export default function PasswordManager() {
                     </button>
                   </div>
                 </div>
-                
-                {/* Información adicional: Fechas y Notas */}
-                <div className="mt-4 pt-4 border-t border-gray-700">
-                  {/* Fechas de creación y modificación */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <p className="text-gray-400 text-sm mb-1 flex items-center">
+
+                {/* Botón para mostrar/ocultar detalles adicionales */}
+                <div className="mt-4 mb-1">
+                  <button 
+                    onClick={() => togglePasswordDetails(password.id)} 
+                    className="flex items-center text-sm text-indigo-400 hover:text-indigo-300"
+                  >
+                    {expandedPasswords[password.id] ? (
+                      <>
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
                         </svg>
-                        Creada:
-                      </p>
-                      <p className="text-sm text-gray-300">{formatDate(password.fechaCreacion)}</p>
-                    </div>
-                    
-                    {password.fechaModificacion && (
-                      <div>
-                        <p className="text-gray-400 text-sm mb-1 flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                          </svg>
-                          Modificada:
-                        </p>
-                        <p className="text-sm text-gray-300">{formatDate(password.fechaModificacion)}</p>
-                      </div>
+                        Ocultar detalles
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        Ver más detalles
+                      </>
                     )}
+                  </button>
+                </div>
+
+                {/* Detalles expandibles */}
+                {expandedPasswords[password.id] && (
+                  <div className="mt-3 p-3 bg-gray-900 rounded border border-gray-700">
+                                  {/* Fechas */}
+              <div className="mb-3">
+                <p className="text-gray-300 text-sm font-medium mb-1">Información temporal:</p>
+                <div className="flex flex-col space-y-1 text-sm">
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-gray-400 mr-1">Creada:</span>
+                    <span className="text-gray-300">{formatDate(password.fechaCreacion)}</span>
                   </div>
-                  
-                  {/* Notas */}
-                  {password.notas && password.notas.trim() !== "" && (
-                    <div className="mb-2">
-                      <p className="text-gray-400 text-sm mb-1 flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Notas:
-                      </p>
-                      <p className="text-sm text-gray-300 bg-gray-700/50 p-2 rounded whitespace-pre-wrap">{password.notas}</p>
+                  {password.fechaModificacion && (
+                    <div className="flex items-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span className="text-gray-400 mr-1">Última modificación:</span>
+                      <span className="text-gray-300">{formatDate(password.fechaModificacion)}</span>
                     </div>
                   )}
                 </div>
-                
-                {/* Botones de acción */}
-                <div className="mt-4 flex justify-end space-x-2">
-                  <button 
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm flex items-center transition-colors"
-                    onClick={() => router.push(`/editar-contrasena?id=${password.id}`)}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                    Editar
-                  </button>
-                </div>
+              </div>
+
+                    {/* Notas */}
+                    {password.notas && (
+                      <div className="mb-2">
+                        <p className="text-gray-300 text-sm font-medium mb-1">Notas:</p>
+                        <div className="bg-gray-800 p-2 rounded whitespace-pre-wrap text-gray-300">
+                          {password.notas}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Acciones adicionales */}
+                    <div className="flex justify-end mt-3">
+                      <button
+                        onClick={() => router.push(`/gestionar-contraseñas/editar?id=${password.id}`)}
+                        className="px-3 py-1 text-sm bg-indigo-700 hover:bg-indigo-600 text-white rounded-md transition-colors mr-2"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        className="px-3 py-1 text-sm bg-red-700 hover:bg-red-600 text-white rounded-md transition-colors"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
