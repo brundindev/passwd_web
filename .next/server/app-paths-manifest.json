@@ -1,1 +1,6 @@
-{}
+{
+  "/icon/route": "app/icon/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/contacto/page": "app/contacto/page.js",
+  "/(default)/page": "app/(default)/page.js"
+}

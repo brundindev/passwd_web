@@ -19,15 +19,6 @@ const auth = getAuth(app);
 const firestore = getFirestore(app);
 
 // Configuración para evitar errores de BloomFilter usando API pública
-// Forzar configuración de larga conexión para evitar errores de BloomFilter
-if (typeof window !== 'undefined') {
-  const firestoreSettings = {
-    experimentalForceLongPolling: true, 
-    useFetchStreams: false,
-  };
-  // @ts-ignore - Ignorar errores de tipo para esta configuración
-  firestore._settings = firestoreSettings;
-}
 
 // Habilitar la persistencia de IndexedDB silenciosamente (sin advertencias)
 try {
@@ -61,31 +52,6 @@ export class AuthService {
     return auth.currentUser;
   }
   
-  // Asegurar que existe el documento del administrador
-  async ensureAdminDocument() {
-    try {
-      const adminId = 'admin_brundindev';
-      const adminEmail = 'brundindev@gmail.com';
-      
-      const docRef = doc(firestore, "usuarios", adminId);
-      const docSnap = await getDoc(docRef);
-      
-      if (!docSnap.exists()) {
-        // Crear el documento del administrador
-        await setDoc(docRef, {
-          email: adminEmail,
-          nombre: "Administrador",
-          isAdmin: true,
-          registroCompletado: true,
-          fechaRegistro: new Date().toISOString()
-        });
-        console.log("Documento del administrador creado");
-      }
-    } catch (error) {
-      console.error("Error al verificar documento del administrador:", error);
-    }
-  }
-
   // Iniciar sesión con correo y contraseña
   async signInWithEmailAndPassword(email: string, password: string) {
     try {
@@ -95,11 +61,6 @@ export class AuthService {
       if (!userCredential.user.emailVerified && userCredential.user.providerData[0].providerId === 'password') {
         await signOut(auth);
         throw new Error("Por favor, verifica tu correo electrónico antes de iniciar sesión. Revisa tu bandeja de entrada.");
-      }
-      
-      // Si es el administrador, asegurarse de que existe su documento
-      if (email === 'brundindev@gmail.com') {
-        await this.ensureAdminDocument();
       }
       
       console.log("Inicio de sesión exitoso:", userCredential.user.uid);
