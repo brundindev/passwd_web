@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where } from 'firebase/firestore';
+import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where, onSnapshot } from 'firebase/firestore';
 import PageTransition from '@/components/ui/animation/page-transition';
 import ScrollAnimation from '@/components/ui/animation/scroll-animation';
 import { notifyTicketReplied, notifyTicketClosed, notifyTicketReopened, logTicketActivity } from '@/lib/firebase/notifications';
@@ -82,41 +82,40 @@ function LogsActivityComponent() {
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const db = getFirestore();
-        const q = query(
-          collection(db, "notifications"),
-          where("adminOnly", "==", true),
-          orderBy("createdAt", "desc"),
-        );
-        
-        const querySnapshot = await getDocs(q);
-        const logsData: any[] = [];
-        
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          if (data.message && data.message.startsWith('[LOG]')) {
-            logsData.push({
-              id: doc.id,
-              message: data.message,
-              createdAt: data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
-              createdBy: data.createdBy,
-              ticketId: data.ticketId,
-              type: data.type
-            });
-          }
-        });
-        
-        setLogs(logsData);
-      } catch (error) {
-        console.error("Error al cargar logs:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    const db = getFirestore();
+    const q = query(
+      collection(db, "notifications"),
+      where("adminOnly", "==", true),
+      orderBy("createdAt", "desc"),
+    );
     
-    fetchLogs();
+    // Usar onSnapshot en lugar de getDocs para actualización en tiempo real
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const logsData: any[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        if (data.message && data.message.startsWith('[LOG]')) {
+          logsData.push({
+            id: doc.id,
+            message: data.message,
+            createdAt: data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt),
+            createdBy: data.createdBy,
+            ticketId: data.ticketId,
+            type: data.type
+          });
+        }
+      });
+      
+      setLogs(logsData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error en el listener de logs:", error);
+      setLoading(false);
+    });
+    
+    // Limpiar el listener cuando el componente se desmonta
+    return () => unsubscribe();
   }, []);
   
   // Función para formatear la fecha
@@ -255,7 +254,7 @@ export default function TicketsAdminClient() {
         setIsAdmin(isAdminUser);
         
         if (isAdminUser) {
-          await cargarTickets();
+          cargarTickets();
         } else {
           // Si no es admin, redirigir
           router.push('/');
@@ -283,34 +282,43 @@ export default function TicketsAdminClient() {
   }, [tickets, filter]);
 
   // Cargar todos los tickets para el administrador
-  const cargarTickets = async () => {
+  const cargarTickets = () => {
     try {
       const q = query(
         collection(db, "tickets"),
         orderBy("createdAt", "desc")
       );
       
-      const querySnapshot = await getDocs(q);
-      const ticketsData: Ticket[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        ticketsData.push({
-          id: doc.id,
-          userId: data.userId,
-          userEmail: data.userEmail,
-          asunto: data.asunto,
-          mensaje: data.mensaje,
-          estado: data.estado,
-          createdAt: data.createdAt,
-          respuestas: data.respuestas || []
+      // Usar onSnapshot para actualizaciones en tiempo real
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const ticketsData: Ticket[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          ticketsData.push({
+            id: doc.id,
+            userId: data.userId,
+            userEmail: data.userEmail,
+            asunto: data.asunto,
+            mensaje: data.mensaje,
+            estado: data.estado,
+            createdAt: data.createdAt,
+            respuestas: data.respuestas || []
+          });
         });
+        
+        setTickets(ticketsData);
+      }, (error) => {
+        console.error("Error al escuchar cambios en tickets:", error);
+        setError("No se pudieron cargar los tickets. Inténtalo de nuevo más tarde.");
       });
       
-      setTickets(ticketsData);
+      // Almacenar la función de cancelación para limpiar cuando se desmonte el componente
+      return unsubscribe;
     } catch (error) {
-      console.error("Error al cargar tickets:", error);
+      console.error("Error al configurar listener de tickets:", error);
       setError("No se pudieron cargar los tickets. Inténtalo de nuevo más tarde.");
+      return () => {}; // Devolver una función vacía en caso de error
     }
   };
 
@@ -359,8 +367,6 @@ export default function TicketsAdminClient() {
       setRespuesta('');
       setSuccess("Tu respuesta ha sido enviada");
       
-      // Actualizar la lista de tickets
-      await cargarTickets();
     } catch (error) {
       console.error("Error al enviar respuesta:", error);
       setError("No se pudo enviar la respuesta. Inténtalo de nuevo más tarde.");
@@ -413,8 +419,8 @@ export default function TicketsAdminClient() {
       
       setSuccess("Ticket cerrado correctamente");
       
-      // Actualizar la lista de tickets en segundo plano
-      cargarTickets().catch(err => console.error("Error al recargar tickets:", err));
+      // No usar .catch ya que cargarTickets ahora devuelve una función de cancelación, no una promesa
+      // Actualización en tiempo real
     } catch (error) {
       console.error("Error al cerrar ticket:", error);
       setError("No se pudo cerrar el ticket. Inténtalo de nuevo más tarde.");
@@ -467,8 +473,8 @@ export default function TicketsAdminClient() {
       
       setSuccess("Ticket reabierto correctamente");
       
-      // Actualizar la lista de tickets en segundo plano
-      cargarTickets().catch(err => console.error("Error al recargar tickets:", err));
+      // No usar .catch ya que cargarTickets ahora devuelve una función de cancelación, no una promesa
+      // Actualización en tiempo real
     } catch (error) {
       console.error("Error al reabrir ticket:", error);
       setError("No se pudo reabrir el ticket. Inténtalo de nuevo más tarde.");
@@ -503,8 +509,8 @@ export default function TicketsAdminClient() {
       setSuccess("Ticket eliminado correctamente");
       setSelectedTicket(null);
       
-      // Actualizar la lista de tickets
-      await cargarTickets();
+      // Ya no es necesario cargar tickets manualmente, las actualizaciones ocurren en tiempo real
+      // await cargarTickets();
     } catch (error) {
       console.error("Error al eliminar ticket:", error);
       setError("No se pudo eliminar el ticket. Inténtalo de nuevo más tarde.");

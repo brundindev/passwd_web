@@ -11,7 +11,7 @@ interface Ticket {
   respuestas: any[];
 }
 
-interface TicketItemProps {
+export interface TicketItemProps {
   ticket: Ticket;
   isSelected: boolean;
   onClick: () => void;

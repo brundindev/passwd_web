@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, query, where, getDocs, doc, updateDoc, orderBy, onSnapshot } from 'firebase/firestore';
 import { AuthService } from '@/lib/firebase/firebase';
 import PageTransition from '@/components/ui/animation/page-transition';
 import ScrollAnimation from '@/components/ui/animation/scroll-animation';
@@ -55,21 +55,26 @@ export default function ContactoClient() {
       setLoading(false);
       
       if (user) {
-        cargarTickets(user.uid).then(() => {
-          // Verificar si hay un ticket específico en la URL
-          const ticketId = searchParams.get('ticket');
-          if (ticketId) {
-            setSelectedTicket(ticketId);
-          }
-        });
+        const unsub = cargarTickets(user.uid);
+        
+        // Verificar si hay un ticket específico en la URL
+        const ticketId = searchParams.get('ticket');
+        if (ticketId) {
+          setSelectedTicket(ticketId);
+        }
+        
+        // Limpiar el listener cuando el componente se desmonte
+        return () => {
+          unsub && unsub();
+        };
       }
     });
     
     return () => unsubscribe();
   }, [searchParams]);
 
-  // Cargar los tickets del usuario actual
-  const cargarTickets = async (userId: string) => {
+  // Cargar los tickets del usuario actual con actualizaciones en tiempo real
+  const cargarTickets = (userId: string) => {
     try {
       const q = query(
         collection(db, "tickets"), 
@@ -77,27 +82,36 @@ export default function ContactoClient() {
         orderBy("createdAt", "desc")
       );
       
-      const querySnapshot = await getDocs(q);
-      const ticketsData: Ticket[] = [];
-      
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        ticketsData.push({
-          id: doc.id,
-          userId: data.userId,
-          userEmail: data.userEmail,
-          asunto: data.asunto,
-          mensaje: data.mensaje,
-          estado: data.estado,
-          createdAt: data.createdAt,
-          respuestas: data.respuestas || []
+      // Usar onSnapshot para actualizaciones en tiempo real
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const ticketsData: Ticket[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          ticketsData.push({
+            id: doc.id,
+            userId: data.userId,
+            userEmail: data.userEmail,
+            asunto: data.asunto,
+            mensaje: data.mensaje,
+            estado: data.estado,
+            createdAt: data.createdAt,
+            respuestas: data.respuestas || []
+          });
         });
+        
+        setTickets(ticketsData);
+      }, (error) => {
+        console.error("Error al escuchar cambios en tickets:", error);
+        setError("No se pudieron cargar tus tickets. Inténtalo de nuevo más tarde.");
       });
       
-      setTickets(ticketsData);
+      // Retornar la función para cancelar la suscripción
+      return unsubscribe;
     } catch (error) {
-      console.error("Error al cargar tickets:", error);
+      console.error("Error al configurar listener de tickets:", error);
       setError("No se pudieron cargar tus tickets. Inténtalo de nuevo más tarde.");
+      return () => {}; // Retornar una función vacía en caso de error
     }
   };
 
@@ -152,8 +166,8 @@ export default function ContactoClient() {
       setMensaje('');
       setSuccess("Tu ticket ha sido enviado correctamente. Nuestro equipo lo revisará en breve.");
       
-      // Recargar los tickets
-      cargarTickets(user.uid);
+      // Ya no necesitamos recargar tickets manualmente debido a las actualizaciones en tiempo real
+      // cargarTickets(user.uid);
     } catch (error) {
       console.error("Error al enviar ticket:", error);
       setError("No se pudo enviar el ticket. Inténtalo de nuevo más tarde.");
@@ -220,8 +234,8 @@ export default function ContactoClient() {
       setRespuesta('');
       setSuccess("Tu respuesta ha sido enviada");
       
-      // Actualizar la lista de tickets
-      cargarTickets(user.uid);
+      // Ya no necesitamos recargar tickets manualmente debido a las actualizaciones en tiempo real
+      // cargarTickets(user.uid);
     } catch (error) {
       console.error("Error al enviar respuesta:", error);
       setError("No se pudo enviar la respuesta. Inténtalo de nuevo más tarde.");

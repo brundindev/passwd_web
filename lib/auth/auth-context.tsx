@@ -45,6 +45,20 @@ export default function AuthProvider({ children }: AuthProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
+  // Crear el documento del administrador durante la carga inicial
+  useEffect(() => {
+    const createAdminDoc = async () => {
+      try {
+        // Asegurar que existe el documento del administrador
+        await authService.ensureAdminDocument();
+      } catch (error) {
+        console.error("Error al crear documento del administrador:", error);
+      }
+    };
+    
+    createAdminDoc();
+  }, []);
+
   useEffect(() => {
     // Escuchar cambios en el estado de autenticación
     const unsubscribe = onAuthStateChanged(authService.auth, async (user) => {

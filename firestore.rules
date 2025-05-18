@@ -6,6 +6,11 @@ service cloud.firestore {
       return request.auth != null && request.auth.token.email == 'brundindev@gmail.com';
     }
     
+    // Función auxiliar para validar que un usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
     // Regla general: denegar acceso por defecto
     match /{document=**} {
       allow read, write: if false;
@@ -13,17 +18,20 @@ service cloud.firestore {
     
     // Regla para la colección "usuarios"
     match /usuarios/{userId} {
-      // Permitir lectura si el usuario está autenticado y es el propio usuario
-      allow read: if request.auth != null && 
+      // Permitir lectura si el usuario está autenticado y es el propio usuario o es admin
+      allow read: if isAuthenticated() && 
                  (request.auth.uid == userId || isAdmin());
       
-      // Permitir escritura si el usuario está autenticado y es el propio usuario
-      allow write: if request.auth != null && 
+      // Permitir búsqueda para encontrar al administrador por correo
+      allow list: if isAuthenticated();
+      
+      // Permitir escritura si el usuario está autenticado y es el propio usuario o es admin
+      allow write: if isAuthenticated() && 
                   (request.auth.uid == userId || isAdmin());
       
       // Permitir acceso a las subcolecciones del usuario
       match /{subcollection}/{document} {
-        allow read, write: if request.auth != null && 
+        allow read, write: if isAuthenticated() && 
                           (request.auth.uid == userId || isAdmin());
       }
     }
@@ -31,14 +39,14 @@ service cloud.firestore {
     // Reglas para la colección "tickets"
     match /tickets/{ticketId} {
       // Cualquier usuario autenticado puede crear tickets
-      allow create: if request.auth != null;
+      allow create: if isAuthenticated();
       
       // Los usuarios pueden leer sus propios tickets
-      allow read: if request.auth != null && 
+      allow read: if isAuthenticated() && 
                  (resource.data.userId == request.auth.uid || isAdmin());
       
       // Los usuarios pueden actualizar sus propios tickets
-      allow update: if request.auth != null && 
+      allow update: if isAuthenticated() && 
                    (resource.data.userId == request.auth.uid || isAdmin());
       
       // Solo los administradores pueden eliminar tickets
@@ -47,26 +55,29 @@ service cloud.firestore {
     
     // Reglas para la colección "notifications"
     match /notifications/{notificationId} {
-      // Permitir crear notificaciones a cualquier usuario autenticado
-      allow create: if request.auth != null;
+      // Cualquier usuario autenticado puede crear notificaciones
+      allow create: if isAuthenticated();
       
-      // Permitir leer notificaciones:
-      // 1. Si el usuario está autenticado Y
-      // 2. Si el usuario es el destinatario de la notificación O es administrador
-      allow read: if request.auth != null && 
-                 (resource.data.userId == request.auth.uid || isAdmin());
+      // Permitir leer notificaciones según destinatario
+      allow read: if isAuthenticated() && 
+                 (
+                   // Si es una notificación para el usuario actual
+                   (resource.data.userId == request.auth.uid) ||
+                   // O es admin y la notificación es para admin
+                   (isAdmin() && resource.data.adminOnly == true) ||
+                   // O es admin y quiere ver todas
+                   isAdmin()
+                 );
       
-      // Permitir actualizar y eliminar notificaciones:
-      // 1. Si el usuario está autenticado Y
-      // 2. Si el usuario es el destinatario de la notificación O es administrador
-      allow update, delete: if request.auth != null && 
+      // Permitir actualizar y eliminar notificaciones
+      allow update, delete: if isAuthenticated() && 
                            (resource.data.userId == request.auth.uid || isAdmin());
     }
     
     // Reglas para la colección "folders"
     match /folders/{folderId} {
       // Todos los usuarios autenticados pueden leer las carpetas
-      allow read: if request.auth != null;
+      allow read: if isAuthenticated();
       
       // Solo los administradores pueden crear, actualizar o eliminar carpetas
       allow write: if isAdmin();
