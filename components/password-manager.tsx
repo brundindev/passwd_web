@@ -18,8 +18,18 @@ interface SavedPassword {
   notas?: string;
 }
 
+// Tipo para las carpetas
+interface Folder {
+  id: string;
+  name: string;
+  color?: string;
+  description?: string;
+}
+
 export default function PasswordManager() {
   const [passwords, setPasswords] = useState<SavedPassword[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [folderMap, setFolderMap] = useState<Record<string, Folder>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState<Record<string, boolean>>({});
@@ -37,7 +47,7 @@ export default function PasswordManager() {
     }
   };
 
-  // Obtener las contraseñas del usuario al cargar la página
+  // Obtener las contraseñas y carpetas del usuario al cargar la página
   useEffect(() => {
     let authCheckTimeout: NodeJS.Timeout;
     console.log("Iniciando efecto para cargar contraseñas");
@@ -54,12 +64,14 @@ export default function PasswordManager() {
           if (repaired) {
             console.log("Se ha reparado la estructura de datos del usuario. Cargando contraseñas...");
           }
-          // Intentar cargar contraseñas después de verificar/reparar
-          fetchPasswords(currentUser.uid);
+          // Cargar carpetas primero y luego las contraseñas
+          await fetchFolders(currentUser.uid);
+          await fetchPasswords(currentUser.uid);
         } catch (error) {
           console.error("Error al verificar/reparar datos:", error);
           // Intentar cargar contraseñas de todos modos
-          fetchPasswords(currentUser.uid);
+          await fetchFolders(currentUser.uid);
+          await fetchPasswords(currentUser.uid);
         }
       } else {
         // Esperar un poco antes de redirigir por si es solo que está cargando
@@ -72,13 +84,15 @@ export default function PasswordManager() {
           } else {
             // Usuario autenticado después del timeout, verificar y reparar
             authService.verifyAndRepairUserData(user.uid)
-              .then(repaired => {
+              .then(async repaired => {
                 console.log("Resultado de verificación/reparación:", repaired ? "Reparado" : "No necesitaba reparación");
-                fetchPasswords(user.uid);
+                await fetchFolders(user.uid);
+                await fetchPasswords(user.uid);
               })
-              .catch(error => {
+              .catch(async error => {
                 console.error("Error al verificar/reparar datos después del timeout:", error);
-                fetchPasswords(user.uid);
+                await fetchFolders(user.uid);
+                await fetchPasswords(user.uid);
               });
           }
         }, 1500); // Esperar 1.5 segundos
@@ -92,7 +106,40 @@ export default function PasswordManager() {
     };
   }, [router]);
 
-  // Función para cargar contraseñas - Movida fuera del useEffect para poder reutilizarla
+  // Función para cargar todas las carpetas
+  const fetchFolders = async (userId: string) => {
+    try {
+      console.log("Cargando carpetas...");
+      const db = getFirestore();
+      
+      // Cargar desde la colección de carpetas
+      const foldersQuery = query(collection(db, "folders"));
+      const foldersSnapshot = await getDocs(foldersQuery);
+      
+      const foldersData: Folder[] = [];
+      const foldersMapData: Record<string, Folder> = {};
+      
+      foldersSnapshot.forEach((doc) => {
+        const data = doc.data();
+        const folder: Folder = {
+          id: doc.id,
+          name: data.name || "Sin nombre",
+          color: data.color,
+          description: data.description
+        };
+        foldersData.push(folder);
+        foldersMapData[doc.id] = folder;
+      });
+      
+      console.log("Carpetas cargadas:", foldersData.length);
+      setFolders(foldersData);
+      setFolderMap(foldersMapData);
+    } catch (error) {
+      console.error("Error al cargar carpetas:", error);
+    }
+  };
+
+  // Función para cargar contraseñas
   const fetchPasswords = async (userId: string) => {
     try {
       console.log("Iniciando carga de contraseñas para usuario:", userId);
@@ -254,6 +301,11 @@ export default function PasswordManager() {
     // Aquí podrías añadir una notificación de que se ha copiado
   };
 
+  // Obtener nombre de carpeta por ID
+  const getFolderName = (folderId: string): string => {
+    return folderMap[folderId]?.name || folderId;
+  };
+
   // Filtrar contraseñas basadas en la búsqueda y categoría/carpeta
   const filteredPasswords = passwords.filter(password => {
     const matchesSearch = 
@@ -272,17 +324,30 @@ export default function PasswordManager() {
   });
 
   // Obtener categorías/carpetas únicas de las contraseñas
-  const categoriesSet = new Set<string>();
+  const categoryInfo: Record<string, {id: string, name: string}> = {};
   passwords.forEach(p => {
     if (typeof p.categoria === 'string' && p.categoria) {
-      categoriesSet.add(p.categoria);
+      categoryInfo[p.categoria] = {
+        id: p.categoria,
+        name: getFolderName(p.categoria)
+      };
     } else if (Array.isArray(p.categoria)) {
       p.categoria.forEach(cat => {
-        if (cat) categoriesSet.add(cat);
+        if (cat) {
+          categoryInfo[cat] = {
+            id: cat,
+            name: getFolderName(cat)
+          };
+        }
       });
     }
   });
-  const categories = ["all", ...Array.from(categoriesSet).sort()];
+  
+  // Crear lista de categorías para mostrar en la UI
+  const categories = [
+    { id: "all", name: "Todas" },
+    ...Object.values(categoryInfo).sort((a, b) => a.name.localeCompare(b.name))
+  ];
 
   // Variantes para animaciones
   const containerVariants = {
@@ -360,34 +425,24 @@ export default function PasswordManager() {
         <div className="mb-2">
           <h3 className="text-gray-300 mb-2 font-semibold">Carpetas</h3>
           <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
-            <button
-              onClick={() => setSelectedCategory("all")}
-              className={`px-3 py-1.5 rounded-lg flex items-center transition-colors ${
-                selectedCategory === "all" 
-                  ? 'bg-indigo-600 text-white' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-              </svg>
-              Todas
-            </button>
-            
-            {categories.filter(cat => cat !== "all").map((category, index) => (
+            {categories.map((category) => (
               <button
-                key={index}
-                onClick={() => setSelectedCategory(category)}
+                key={category.id}
+                onClick={() => setSelectedCategory(category.id)}
                 className={`px-3 py-1.5 rounded-lg flex items-center transition-colors ${
-                  selectedCategory === category 
+                  selectedCategory === category.id 
                     ? 'bg-indigo-600 text-white' 
                     : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  {category.id === "all" ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  )}
                 </svg>
-                {category}
+                {category.name}
               </button>
             ))}
           </div>
@@ -405,7 +460,7 @@ export default function PasswordManager() {
             {searchTerm 
               ? "No hay resultados que coincidan con tu búsqueda. Intenta con otros términos."
               : selectedCategory !== "all"
-                ? `No hay contraseñas en la carpeta "${selectedCategory}". Puedes añadir contraseñas a esta carpeta desde la opción "Añadir contraseña".`
+                ? `No hay contraseñas en la carpeta "${categoryInfo[selectedCategory]?.name || selectedCategory}". Puedes añadir contraseñas a esta carpeta desde la opción "Añadir contraseña".`
                 : "Aún no tienes contraseñas guardadas. Las contraseñas que guardes en la app aparecerán aquí."}
           </p>
         </div>
@@ -417,7 +472,7 @@ export default function PasswordManager() {
           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
-          <span className="text-indigo-300 font-medium">{selectedCategory}</span>
+          <span className="text-indigo-300 font-medium">{categoryInfo[selectedCategory]?.name || selectedCategory}</span>
           <span className="text-gray-400 ml-2">({filteredPasswords.length} {filteredPasswords.length === 1 ? 'contraseña' : 'contraseñas'})</span>
         </div>
       )}
@@ -519,23 +574,40 @@ export default function PasswordManager() {
                 {password.categoria && (
                   <div className="flex items-center">
                     <span className="text-gray-400 text-sm w-20">Carpeta:</span>
-                    <button 
-                      onClick={() => {
-                        const categoryValue = Array.isArray(password.categoria) 
-                          ? password.categoria[0] 
-                          : password.categoria;
-                        
-                        if (categoryValue) {
-                          setSelectedCategory(categoryValue);
-                        }
-                      }}
-                      className="text-sm bg-gray-700 hover:bg-indigo-600/30 text-gray-300 hover:text-indigo-300 px-2 py-0.5 rounded-full flex items-center transition-colors"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                      </svg>
-                      {Array.isArray(password.categoria) ? password.categoria[0] : password.categoria}
-                    </button>
+                    {typeof password.categoria === 'string' ? (
+                      <button 
+                        onClick={() => {
+                          if (password.categoria) {
+                            setSelectedCategory(password.categoria as string);
+                          }
+                        }}
+                        className="text-sm bg-gray-700 hover:bg-indigo-600/30 text-gray-300 hover:text-indigo-300 px-2 py-0.5 rounded-full flex items-center transition-colors"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                        </svg>
+                        {getFolderName(password.categoria as string)}
+                      </button>
+                    ) : Array.isArray(password.categoria) && password.categoria.length > 0 ? (
+                      <div className="flex flex-wrap gap-1">
+                        {password.categoria.map((catId, index) => (
+                          <button 
+                            key={index}
+                            onClick={() => {
+                              if (catId) {
+                                setSelectedCategory(catId);
+                              }
+                            }}
+                            className="text-sm bg-gray-700 hover:bg-indigo-600/30 text-gray-300 hover:text-indigo-300 px-2 py-0.5 rounded-full flex items-center transition-colors mb-1"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                            </svg>
+                            {getFolderName(catId)}
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
                   </div>
                 )}
                 

@@ -1,6 +1,11 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Función para verificar si el usuario es administrador (por email)
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'brundindev@gmail.com';
+    }
+    
     // Regla general: denegar acceso por defecto
     match /{document=**} {
       allow read, write: if false;
@@ -13,13 +18,10 @@ service cloud.firestore {
       
       // Permitir escritura si el usuario está autenticado, es el propio usuario y tiene email verificado
       allow write: if request.auth != null && 
-                   request.auth.uid == userId && 
-                   request.auth.token.email_verified == true;
+                   request.auth.uid == userId;
       
       // Los administradores pueden leer cualquier documento de usuario
-      allow read: if request.auth != null && 
-                  exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
-                  get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
+      allow read: if isAdmin();
       
       // Permitir acceso a las subcolecciones del usuario
       match /{subcollection}/{document} {
@@ -28,60 +30,59 @@ service cloud.firestore {
         
         // El propio usuario puede escribir en sus subcolecciones si tiene email verificado
         allow write: if request.auth != null && 
-                     request.auth.uid == userId && 
-                     request.auth.token.email_verified == true;
+                     request.auth.uid == userId;
                      
         // Los administradores pueden leer cualquier subcolección de cualquier usuario
-        allow read: if request.auth != null && 
-                    exists(/databases/$(database)/documents/usuarios/$(request.auth.uid)) &&
-                    get(/databases/$(database)/documents/usuarios/$(request.auth.uid)).data.role == 'admin';
+        allow read: if isAdmin();
       }
     }
     
     // Reglas para la colección "tickets"
     match /tickets/{ticketId} {
-      // Función para verificar si el usuario es administrador (por email)
-      function isAdmin() {
-        return request.auth != null && request.auth.token.email == 'brundindev@gmail.com';
-      }
-      
       // Los usuarios pueden leer sus propios tickets
       allow read: if request.auth != null && 
                   resource.data.userId == request.auth.uid;
       
       // Los usuarios pueden crear tickets
-      allow create: if request.auth != null && 
-                    request.resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null;
       
       // Los usuarios pueden actualizar sus propios tickets (para añadir respuestas)
       allow update: if request.auth != null && 
-                    resource.data.userId == request.auth.uid;
+                   (resource.data.userId == request.auth.uid || isAdmin());
       
       // El administrador puede leer, actualizar y eliminar todos los tickets
-      allow read, update, delete: if isAdmin();
+      allow read, write: if isAdmin();
     }
     
     // Reglas para la colección "notifications"
     match /notifications/{notificationId} {
-      // Función para verificar si el usuario es administrador (por email)
-      function isAdmin() {
-        return request.auth != null && request.auth.token.email == 'brundindev@gmail.com';
-      }
-      
       // Los usuarios pueden leer sus propias notificaciones
       allow read: if request.auth != null && 
-                  resource.data.userId == request.auth.uid;
+                 (resource.data.userId == request.auth.uid || isAdmin());
       
-      // Los usuarios pueden crear notificaciones dirigidas a ellos mismos o al administrador
-      allow create: if request.auth != null && 
-                   (request.resource.data.userId == request.auth.uid || 
-                    request.resource.data.adminOnly == true);
+      // Los usuarios pueden crear notificaciones
+      allow create: if request.auth != null;
       
       // Los usuarios pueden actualizar y eliminar sus propias notificaciones
       allow update, delete: if request.auth != null && 
-                           resource.data.userId == request.auth.uid;
+                           (resource.data.userId == request.auth.uid || isAdmin());
       
       // El administrador puede leer, crear, actualizar y eliminar todas las notificaciones
+      allow read, write: if isAdmin();
+    }
+    
+    // Reglas para la colección "folders"
+    match /folders/{folderId} {
+      // Todos los usuarios autenticados pueden leer las carpetas
+      allow read: if request.auth != null;
+      
+      // Solo los administradores pueden crear, actualizar o eliminar carpetas
+      allow write: if isAdmin();
+    }
+    
+    // Reglas adicionales para cualquier otra colección que pueda ser necesaria
+    match /{collection}/{document} {
+      // Los administradores tienen acceso completo a todo
       allow read, write: if isAdmin();
     }
   }
