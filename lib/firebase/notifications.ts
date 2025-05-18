@@ -67,7 +67,7 @@ export class NotificationService {
       const querySnapshot = await getDocs(q);
       
       // Usar operaciones batch para actualizar varias notificaciones a la vez
-      const batch = [];
+      const batch: Promise<void>[] = [];
       querySnapshot.forEach((doc) => {
         batch.push(updateDoc(doc.ref, { read: true }));
       });
