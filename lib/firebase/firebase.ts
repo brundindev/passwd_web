@@ -1,4 +1,4 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, setPersistence, browserLocalPersistence, sendEmailVerification, User } from 'firebase/auth';
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where, enableIndexedDbPersistence, connectFirestoreEmulator } from 'firebase/firestore';
 
@@ -12,35 +12,34 @@ const firebaseConfig = {
   storageBucket: "passwd-brundindev.firebasestorage.app",
 };
 
-// Inicializar Firebase
-const app = initializeApp(firebaseConfig);
+// Inicializar Firebase si no está ya inicializado
+// Esto evita errores de múltiples instancias y de "No Firebase App has been created"
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
-// Desactivar BloomFilter para evitar errores
 const firestore = getFirestore(app);
 
-// Configuración para evitar errores de BloomFilter usando API pública
-
-// Habilitar la persistencia de IndexedDB silenciosamente (sin advertencias)
-try {
-  enableIndexedDbPersistence(firestore)
-    .then(() => {
-      // No mostrar mensaje en la consola para evitar advertencias
-    })
-    .catch((error) => {
-      // Solo registrar errores reales, no advertencias de obsolescencia
-      if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') {
-        console.error("Error al habilitar la persistencia de Firestore:", error);
-      }
-    });
-} catch (error) {
-  // Capturar cualquier error pero no mostrar advertencias
+// Persistencia de IndexedDB solo en entorno cliente/navegador
+if (typeof window !== 'undefined') {
+  // Habilitar la persistencia de IndexedDB silenciosamente
+  try {
+    enableIndexedDbPersistence(firestore)
+      .catch((error) => {
+        // Solo registrar errores reales, no advertencias de obsolescencia
+        if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') {
+          console.error("Error al habilitar la persistencia de Firestore:", error);
+        }
+      });
+    
+    // Configurar persistencia local para autenticación
+    setPersistence(auth, browserLocalPersistence)
+      .catch((error) => {
+        console.error("Error al configurar la persistencia de autenticación:", error);
+      });
+  } catch (error) {
+    // Capturar cualquier error pero no mostrar advertencias
+    console.warn("Error al configurar persistencia:", error);
+  }
 }
-
-// Configurar persistencia local para evitar problemas de sessionStorage
-setPersistence(auth, browserLocalPersistence)
-  .catch((error) => {
-    console.error("Error al configurar la persistencia de autenticación:", error);
-  });
 
 // Clase de servicio de autenticación similar a la de Flutter
 export class AuthService {
