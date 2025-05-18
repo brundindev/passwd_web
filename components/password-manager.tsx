@@ -14,8 +14,11 @@ interface SavedPassword {
   usuario: string;
   contrasena: string;
   fechaCreacion: Date;
+  fechaModificacion?: Date;
   categoria?: string | string[];
   notas?: string;
+  color?: string;
+  fortaleza?: number;
 }
 
 // Tipo para las carpetas
@@ -121,6 +124,7 @@ export default function PasswordManager() {
       
       foldersSnapshot.forEach((doc) => {
         const data = doc.data();
+        console.log("Carpeta encontrada:", doc.id, data);
         const folder: Folder = {
           id: doc.id,
           name: data.name || "Sin nombre",
@@ -132,6 +136,7 @@ export default function PasswordManager() {
       });
       
       console.log("Carpetas cargadas:", foldersData.length);
+      console.log("Contenido del mapa de carpetas:", foldersMapData);
       setFolders(foldersData);
       setFolderMap(foldersMapData);
     } catch (error) {
@@ -339,24 +344,45 @@ export default function PasswordManager() {
 
   // Obtener nombre de carpeta por ID
   const getFolderName = (folderId: string): string => {
+    console.log(`Intentando obtener nombre para folderId: ${folderId}`);
+    console.log("Estado actual del folderMap:", folderMap);
+    
     // Verificar si existe en el mapa de carpetas
     if (folderMap[folderId] && folderMap[folderId].name) {
+      console.log(`Nombre encontrado en el mapa: ${folderMap[folderId].name}`);
       return folderMap[folderId].name;
     }
     
     // Buscar en el array de carpetas en caso de que el mapa no esté actualizado
     const folder = folders.find(f => f.id === folderId);
     if (folder && folder.name) {
+      console.log(`Nombre encontrado en el array: ${folder.name}`);
       return folder.name;
     }
     
     // Si no se encuentra pero es un ID válido, mostrar "Carpeta sin nombre"
     if (folderId && folderId.length > 0) {
+      console.log(`No se encontró nombre para folderId: ${folderId}`);
       return "Carpeta sin nombre";
     }
     
     // Valor por defecto
+    console.log("ID de carpeta vacío, retornando 'Sin carpeta'");
     return "Sin carpeta";
+  };
+
+  // Formatear fecha para mostrar de forma amigable
+  const formatDate = (date: Date | undefined): string => {
+    if (!date) return "Fecha desconocida";
+    
+    // Formatear fecha en formato local
+    return new Intl.DateTimeFormat('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(date);
   };
 
   // Filtrar contraseñas basadas en la búsqueda y categoría/carpeta
@@ -658,6 +684,60 @@ export default function PasswordManager() {
                       </svg>
                     </button>
                   </div>
+                </div>
+                
+                {/* Información adicional: Fechas y Notas */}
+                <div className="mt-4 pt-4 border-t border-gray-700">
+                  {/* Fechas de creación y modificación */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <p className="text-gray-400 text-sm mb-1 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Creada:
+                      </p>
+                      <p className="text-sm text-gray-300">{formatDate(password.fechaCreacion)}</p>
+                    </div>
+                    
+                    {password.fechaModificacion && (
+                      <div>
+                        <p className="text-gray-400 text-sm mb-1 flex items-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                          Modificada:
+                        </p>
+                        <p className="text-sm text-gray-300">{formatDate(password.fechaModificacion)}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Notas */}
+                  {password.notas && password.notas.trim() !== "" && (
+                    <div className="mb-2">
+                      <p className="text-gray-400 text-sm mb-1 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Notas:
+                      </p>
+                      <p className="text-sm text-gray-300 bg-gray-700/50 p-2 rounded whitespace-pre-wrap">{password.notas}</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Botones de acción */}
+                <div className="mt-4 flex justify-end space-x-2">
+                  <button 
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-sm flex items-center transition-colors"
+                    onClick={() => router.push(`/editar-contrasena?id=${password.id}`)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    Editar
+                  </button>
                 </div>
               </div>
             </motion.div>
