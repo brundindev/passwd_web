@@ -349,7 +349,7 @@ export default function PasswordManager() {
         {/* Selector de carpetas/categorías */}
         <div className="mb-2">
           <h3 className="text-gray-300 mb-2 font-semibold">Carpetas</h3>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 overflow-x-auto pb-2">
             <button
               onClick={() => setSelectedCategory("all")}
               className={`px-3 py-1.5 rounded-lg flex items-center transition-colors ${

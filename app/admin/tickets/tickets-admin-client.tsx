@@ -6,6 +6,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { getFirestore, collection, query, getDocs, doc, updateDoc, deleteDoc, orderBy, where } from 'firebase/firestore';
 import PageTransition from '@/components/ui/animation/page-transition';
 import ScrollAnimation from '@/components/ui/animation/scroll-animation';
+import { notifyTicketReplied, notifyTicketClosed, notifyTicketReopened, logTicketActivity } from '@/lib/firebase/notifications';
 
 // Definición de la interfaz para los tickets
 interface Ticket {
@@ -72,6 +73,156 @@ function AdminTicketItem({ ticket, onClick, isSelected }: {
           {ticket.respuestas.length} {ticket.respuestas.length === 1 ? 'respuesta' : 'respuestas'}
         </span>
       </div>
+    </div>
+  );
+}
+
+function LogsActivityComponent() {
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const db = getFirestore();
+        const q = query(
+          collection(db, "notifications"),
+          where("message", ">=", "[LOG]"),
+          orderBy("message"),
+          orderBy("createdAt", "desc"),
+          where("adminOnly", "==", true)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        const logsData: any[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          logsData.push({
+            id: doc.id,
+            message: data.message,
+            createdAt: data.createdAt.toDate(),
+            createdBy: data.createdBy,
+            ticketId: data.ticketId,
+            type: data.type
+          });
+        });
+        
+        setLogs(logsData);
+      } catch (error) {
+        console.error("Error al cargar logs:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchLogs();
+  }, []);
+  
+  // Función para formatear la fecha
+  const formatDate = (date: Date) => {
+    return date.toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+  };
+  
+  // Función para obtener el icono según el tipo de acción
+  const getActionIcon = (type: string) => {
+    switch (type) {
+      case 'ticket_created':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        );
+      case 'ticket_replied':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+          </svg>
+        );
+      case 'ticket_closed':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        );
+      case 'ticket_reopened':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+        );
+      case 'ticket_deleted':
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        );
+      default:
+        return (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        );
+    }
+  };
+  
+  // Función para obtener el color según el tipo de acción
+  const getActionColor = (type: string) => {
+    switch (type) {
+      case 'ticket_created':
+        return 'bg-blue-900/20 text-blue-400';
+      case 'ticket_replied':
+        return 'bg-green-900/20 text-green-400';
+      case 'ticket_closed':
+        return 'bg-yellow-900/20 text-yellow-400';
+      case 'ticket_reopened':
+        return 'bg-purple-900/20 text-purple-400';
+      case 'ticket_deleted':
+        return 'bg-red-900/20 text-red-400';
+      default:
+        return 'bg-gray-900/20 text-gray-400';
+    }
+  };
+  
+  if (loading) {
+    return (
+      <div className="flex justify-center py-6">
+        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  if (logs.length === 0) {
+    return (
+      <div className="text-center py-6">
+        <p className="text-gray-400">No hay registros de actividad para mostrar.</p>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="space-y-3">
+      {logs.map((log) => (
+        <div key={log.id} className="bg-gray-700/30 rounded-lg p-3 flex items-start">
+          <div className={`rounded-full p-2 mr-3 ${getActionColor(log.type)}`}>
+            {getActionIcon(log.type)}
+          </div>
+          <div className="flex-1">
+            <p className="text-white text-sm">{log.message.replace('[LOG] ', '')}</p>
+            <div className="flex justify-between mt-1">
+              <span className="text-xs text-gray-400">{formatDate(log.createdAt)}</span>
+              <span className="text-xs text-indigo-400">{log.createdBy}</span>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
@@ -199,6 +350,12 @@ export default function TicketsAdminClient() {
         respuestas: respuestasActualizadas
       });
       
+      // Enviar notificación al usuario
+      await notifyTicketReplied(selectedTicket, ticketActual.asunto, ticketActual.userId, user.email || "Administrador");
+      
+      // Registrar actividad
+      await logTicketActivity(selectedTicket, ticketActual.asunto, "respondido como administrador", user.email || "Administrador");
+      
       setRespuesta('');
       setSuccess("Tu respuesta ha sido enviada");
       
@@ -221,10 +378,21 @@ export default function TicketsAdminClient() {
     
     try {
       const ticketRef = doc(db, "tickets", selectedTicket);
+      const ticketActual = tickets.find(t => t.id === selectedTicket);
+      
+      if (!ticketActual) {
+        throw new Error("Ticket no encontrado");
+      }
       
       await updateDoc(ticketRef, {
         estado: 'cerrado'
       });
+      
+      // Enviar notificación al usuario
+      await notifyTicketClosed(selectedTicket, ticketActual.asunto, ticketActual.userId, user?.email || "Administrador");
+      
+      // Registrar actividad
+      await logTicketActivity(selectedTicket, ticketActual.asunto, "cerrado", user?.email || "Administrador");
       
       setSuccess("Ticket cerrado correctamente");
       
@@ -247,10 +415,21 @@ export default function TicketsAdminClient() {
     
     try {
       const ticketRef = doc(db, "tickets", selectedTicket);
+      const ticketActual = tickets.find(t => t.id === selectedTicket);
+      
+      if (!ticketActual) {
+        throw new Error("Ticket no encontrado");
+      }
       
       await updateDoc(ticketRef, {
         estado: 'abierto'
       });
+      
+      // Enviar notificación al usuario
+      await notifyTicketReopened(selectedTicket, ticketActual.asunto, ticketActual.userId, user?.email || "Administrador");
+      
+      // Registrar actividad
+      await logTicketActivity(selectedTicket, ticketActual.asunto, "reabierto", user?.email || "Administrador");
       
       setSuccess("Ticket reabierto correctamente");
       
@@ -276,7 +455,16 @@ export default function TicketsAdminClient() {
     setError(null);
     
     try {
+      const ticketActual = tickets.find(t => t.id === selectedTicket);
+      
+      if (!ticketActual) {
+        throw new Error("Ticket no encontrado");
+      }
+      
       await deleteDoc(doc(db, "tickets", selectedTicket));
+      
+      // Registrar actividad
+      await logTicketActivity(selectedTicket, ticketActual.asunto, "eliminado", user?.email || "Administrador");
       
       setSuccess("Ticket eliminado correctamente");
       setSelectedTicket(null);
@@ -550,6 +738,21 @@ export default function TicketsAdminClient() {
                 </div>
               </ScrollAnimation>
             </div>
+
+            {/* Sistema de logs de actividad de tickets */}
+            <ScrollAnimation
+              variant="fadeInUp"
+              delay={0.6}
+              className="max-w-6xl mx-auto mt-12"
+            >
+              <div className="bg-gray-800 p-6 rounded-lg">
+                <h2 className="h3 mb-6">Registro de actividad</h2>
+                
+                <div className="max-h-[300px] overflow-y-auto">
+                  <LogsActivityComponent />
+                </div>
+              </div>
+            </ScrollAnimation>
           </div>
         </div>
       </section>

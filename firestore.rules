@@ -60,5 +60,29 @@ service cloud.firestore {
       // El administrador puede leer, actualizar y eliminar todos los tickets
       allow read, update, delete: if isAdmin();
     }
+    
+    // Reglas para la colección "notifications"
+    match /notifications/{notificationId} {
+      // Función para verificar si el usuario es administrador (por email)
+      function isAdmin() {
+        return request.auth != null && request.auth.token.email == 'brundindev@gmail.com';
+      }
+      
+      // Los usuarios pueden leer sus propias notificaciones
+      allow read: if request.auth != null && 
+                  resource.data.userId == request.auth.uid;
+      
+      // Los usuarios pueden crear notificaciones dirigidas a ellos mismos o al administrador
+      allow create: if request.auth != null && 
+                   (request.resource.data.userId == request.auth.uid || 
+                    request.resource.data.adminOnly == true);
+      
+      // Los usuarios pueden actualizar y eliminar sus propias notificaciones
+      allow update, delete: if request.auth != null && 
+                           resource.data.userId == request.auth.uid;
+      
+      // El administrador puede leer, crear, actualizar y eliminar todas las notificaciones
+      allow read, write: if isAdmin();
+    }
   }
 } 

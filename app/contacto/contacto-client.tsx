@@ -129,7 +129,10 @@ export default function ContactoClient() {
         respuestas: []
       };
       
-      await addDoc(collection(db, "tickets"), ticketData);
+      const docRef = await addDoc(collection(db, "tickets"), ticketData);
+      
+      // Enviar notificación al administrador
+      await notifyAdminNewTicket(docRef.id, asunto.trim(), user.email || "Usuario");
       
       setAsunto('');
       setMensaje('');
@@ -182,6 +185,12 @@ export default function ContactoClient() {
         // Si el ticket estaba cerrado, lo reabrimos al recibir una respuesta del usuario
         estado: ticketActual.estado === 'cerrado' ? 'abierto' : ticketActual.estado
       });
+      
+      // Enviar notificación al administrador
+      await notifyAdminTicketReplied(selectedTicket, ticketActual.asunto, user.email || "Usuario");
+      
+      // Registrar actividad
+      await logTicketActivity(selectedTicket, ticketActual.asunto, "respondido", user.email || "Usuario");
       
       setRespuesta('');
       setSuccess("Tu respuesta ha sido enviada");
