@@ -64,7 +64,7 @@ export default function DescargarClient() {
                       />
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">Windows</h4>
-                    <p className="text-gray-400 text-center mb-4">v1.0.0</p>
+                    <p className="text-gray-400 text-center mb-4"><span className="text-red-500 font-semibold border border-red-500 rounded-md px-2 py-1">En desarrollo</span></p>
                     <button 
                       disabled
                       title="Próximamente..."
@@ -87,7 +87,7 @@ export default function DescargarClient() {
                       />
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">Linux</h4>
-                    <p className="text-gray-400 text-center mb-4">v1.0.0</p>
+                    <p className="text-gray-400 text-center mb-4"><span className="text-red-500 font-semibold border border-red-500 rounded-md px-2 py-1">En desarrollo</span></p>
                     <button 
                       disabled
                       title="Próximamente..."
@@ -145,7 +145,9 @@ export default function DescargarClient() {
                       />
                     </div>
                     <h4 className="text-xl font-bold leading-snug tracking-tight mb-1">Android</h4>
-                    <p className="text-gray-400 text-center mb-4">Teléfonos y tablets</p>
+                    
+                    <p className="text-gray-400 text-center mb-4"><span className="text-red-500 font-semibold border border-red-500 rounded-md px-2 py-1">En desarrollo</span></p>
+                    
                     <button 
                       disabled
                       title="Próximamente..."
@@ -204,7 +206,7 @@ export default function DescargarClient() {
                     <li>• Implementación del cifrado de extremo a extremo</li>
                     <li>• Soporte para sincronización entre dispositivos</li>
                     <li>• Generador de contraseñas seguras</li>
-                    <li>• Autenticación biométrica en dispositivos compatibles <span className="text-red-500 font-semibold">En desarrollo</span></li>
+                    <li>• Autenticación biométrica en dispositivos compatibles <span className="text-red-500 font-semibold border border-red-500 rounded-md px-2 py-1">En desarrollo</span></li>
                     <li>• Extensiones de navegador para autocompletado</li>
                   </ul>
                 </div>
