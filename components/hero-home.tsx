@@ -30,7 +30,7 @@ export default function HeroHome() {
               <p
                 className="mb-5 text-xl text-indigo-200/65"
               >
-                Passwd te permite almacenar tus contraseñas de forma segura y acceder a ellas cuando las necesites, desde cualquier dispositivo.
+                PASSWD te permite almacenar tus contraseñas de forma segura y acceder a ellas cuando las necesites, desde cualquier dispositivo.
               </p>
               <div className="mx-auto max-w-xs sm:flex sm:max-w-none sm:justify-center mb-5">
                 <div>
