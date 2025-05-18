@@ -229,23 +229,16 @@ export async function notifyAdminNewTicket(ticketId: string, ticketTitle: string
       return null;
     }
     
-    // Crear directamente en Firestore sin usar el servicio
-    const db = getFirestore();
-    const notificationsCollection = collection(db, "notifications");
-    
-    const notificationData = {
+    // Usar el servicio en lugar de acceder directamente
+    return await notificationService.createNotification({
       userId: adminId,
       ticketId,
       ticketTitle,
-      type: 'ticket_created' as NotificationType,
+      type: 'ticket_created',
       message: `Nuevo ticket creado por ${userEmail}: "${ticketTitle}"`,
       createdBy: userEmail,
-      adminOnly: true,
-      read: false,
-      createdAt: Timestamp.now()
-    };
-    
-    return await addDoc(notificationsCollection, notificationData);
+      adminOnly: true
+    });
   } catch (error) {
     console.error("Error en notifyAdminNewTicket:", error);
     throw error;
@@ -274,23 +267,16 @@ export async function notifyAdminTicketReplied(ticketId: string, ticketTitle: st
       return null;
     }
     
-    // Crear directamente en Firestore sin usar el servicio
-    const db = getFirestore();
-    const notificationsCollection = collection(db, "notifications");
-    
-    const notificationData = {
+    // Usar el servicio en lugar de acceder directamente
+    return await notificationService.createNotification({
       userId: adminId,
       ticketId,
       ticketTitle,
-      type: 'ticket_replied' as NotificationType,
+      type: 'ticket_replied',
       message: `${userEmail} ha respondido al ticket "${ticketTitle}"`,
       createdBy: userEmail,
-      adminOnly: true,
-      read: false,
-      createdAt: Timestamp.now()
-    };
-    
-    return await addDoc(notificationsCollection, notificationData);
+      adminOnly: true
+    });
   } catch (error) {
     console.error("Error en notifyAdminTicketReplied:", error);
     throw error;
@@ -334,23 +320,16 @@ export async function logTicketActivity(ticketId: string, ticketTitle: string, a
       type = 'ticket_created';
     }
     
-    // Crear directamente en Firestore sin usar el servicio
-    const db = getFirestore();
-    const notificationsCollection = collection(db, "notifications");
-    
-    const notificationData = {
+    // Usar el servicio en lugar de acceder directamente
+    return await notificationService.createNotification({
       userId: adminId,
       ticketId,
       ticketTitle,
       type,
       message: `[LOG] ${userEmail} ha ${action} el ticket "${ticketTitle}"`,
       createdBy: userEmail,
-      adminOnly: true,
-      read: false,
-      createdAt: Timestamp.now()
-    };
-    
-    return await addDoc(notificationsCollection, notificationData);
+      adminOnly: true
+    });
   } catch (error) {
     console.error("Error en logTicketActivity:", error);
     throw error;

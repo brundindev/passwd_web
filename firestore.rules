@@ -47,19 +47,20 @@ service cloud.firestore {
     
     // Reglas para la colección "notifications"
     match /notifications/{notificationId} {
-      // Cualquier usuario autenticado puede crear notificaciones
+      // Permitir crear notificaciones a cualquier usuario autenticado
       allow create: if request.auth != null;
       
-      // Los usuarios pueden leer sus propias notificaciones
+      // Permitir leer notificaciones:
+      // 1. Si el usuario está autenticado Y
+      // 2. Si el usuario es el destinatario de la notificación O es administrador
       allow read: if request.auth != null && 
                  (resource.data.userId == request.auth.uid || isAdmin());
       
-      // Los usuarios pueden actualizar y eliminar sus propias notificaciones
+      // Permitir actualizar y eliminar notificaciones:
+      // 1. Si el usuario está autenticado Y
+      // 2. Si el usuario es el destinatario de la notificación O es administrador
       allow update, delete: if request.auth != null && 
                            (resource.data.userId == request.auth.uid || isAdmin());
-      
-      // El administrador puede leer, crear, actualizar y eliminar todas las notificaciones
-      allow read, write: if isAdmin();
     }
     
     // Reglas para la colección "folders"

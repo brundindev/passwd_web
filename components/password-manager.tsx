@@ -303,7 +303,24 @@ export default function PasswordManager() {
 
   // Obtener nombre de carpeta por ID
   const getFolderName = (folderId: string): string => {
-    return folderMap[folderId]?.name || folderId;
+    // Verificar si existe en el mapa de carpetas
+    if (folderMap[folderId] && folderMap[folderId].name) {
+      return folderMap[folderId].name;
+    }
+    
+    // Buscar en el array de carpetas en caso de que el mapa no esté actualizado
+    const folder = folders.find(f => f.id === folderId);
+    if (folder && folder.name) {
+      return folder.name;
+    }
+    
+    // Si no se encuentra pero es un ID válido, mostrar "Carpeta sin nombre"
+    if (folderId && folderId.length > 0) {
+      return "Carpeta sin nombre";
+    }
+    
+    // Valor por defecto
+    return "Sin carpeta";
   };
 
   // Filtrar contraseñas basadas en la búsqueda y categoría/carpeta
