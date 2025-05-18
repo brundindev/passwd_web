@@ -207,111 +207,152 @@ export async function notifyTicketReopened(ticketId: string, ticketTitle: string
 
 // Para administrador: notificación cuando se crea un nuevo ticket
 export async function notifyAdminNewTicket(ticketId: string, ticketTitle: string, userEmail: string) {
-  // Obtener el administrador (en este caso por correo)
-  const adminEmail = 'brundindev@gmail.com';
-  
-  // Buscar el ID del administrador en Firestore
-  const q = query(
-    collection(getFirestore(), "usuarios"), 
-    where("email", "==", adminEmail)
-  );
-  
-  const querySnapshot = await getDocs(q);
-  let adminId = '';
-  
-  querySnapshot.forEach((doc) => {
-    adminId = doc.id;
-  });
-  
-  if (!adminId) {
-    console.error("No se encontró el ID del administrador");
-    return null;
+  try {
+    // Obtener el administrador (en este caso por correo)
+    const adminEmail = 'brundindev@gmail.com';
+    
+    // Buscar el ID del administrador en Firestore
+    const q = query(
+      collection(getFirestore(), "usuarios"), 
+      where("email", "==", adminEmail)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    let adminId = '';
+    
+    querySnapshot.forEach((doc) => {
+      adminId = doc.id;
+    });
+    
+    if (!adminId) {
+      console.error("No se encontró el ID del administrador");
+      return null;
+    }
+    
+    // Crear directamente en Firestore sin usar el servicio
+    const db = getFirestore();
+    const notificationsCollection = collection(db, "notifications");
+    
+    const notificationData = {
+      userId: adminId,
+      ticketId,
+      ticketTitle,
+      type: 'ticket_created' as NotificationType,
+      message: `Nuevo ticket creado por ${userEmail}: "${ticketTitle}"`,
+      createdBy: userEmail,
+      adminOnly: true,
+      read: false,
+      createdAt: Timestamp.now()
+    };
+    
+    return await addDoc(notificationsCollection, notificationData);
+  } catch (error) {
+    console.error("Error en notifyAdminNewTicket:", error);
+    throw error;
   }
-  
-  return notificationService.createNotification({
-    userId: adminId,
-    ticketId,
-    ticketTitle,
-    type: 'ticket_created',
-    message: `Nuevo ticket creado por ${userEmail}: "${ticketTitle}"`,
-    createdBy: userEmail,
-    adminOnly: true
-  });
 }
 
 // Para administrador: notificación cuando un usuario responde a un ticket
 export async function notifyAdminTicketReplied(ticketId: string, ticketTitle: string, userEmail: string) {
-  // Similar a la función anterior, buscar el ID del admin
-  const adminEmail = 'brundindev@gmail.com';
-  const q = query(
-    collection(getFirestore(), "usuarios"), 
-    where("email", "==", adminEmail)
-  );
-  
-  const querySnapshot = await getDocs(q);
-  let adminId = '';
-  
-  querySnapshot.forEach((doc) => {
-    adminId = doc.id;
-  });
-  
-  if (!adminId) {
-    console.error("No se encontró el ID del administrador");
-    return null;
+  try {
+    // Similar a la función anterior, buscar el ID del admin
+    const adminEmail = 'brundindev@gmail.com';
+    const q = query(
+      collection(getFirestore(), "usuarios"), 
+      where("email", "==", adminEmail)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    let adminId = '';
+    
+    querySnapshot.forEach((doc) => {
+      adminId = doc.id;
+    });
+    
+    if (!adminId) {
+      console.error("No se encontró el ID del administrador");
+      return null;
+    }
+    
+    // Crear directamente en Firestore sin usar el servicio
+    const db = getFirestore();
+    const notificationsCollection = collection(db, "notifications");
+    
+    const notificationData = {
+      userId: adminId,
+      ticketId,
+      ticketTitle,
+      type: 'ticket_replied' as NotificationType,
+      message: `${userEmail} ha respondido al ticket "${ticketTitle}"`,
+      createdBy: userEmail,
+      adminOnly: true,
+      read: false,
+      createdAt: Timestamp.now()
+    };
+    
+    return await addDoc(notificationsCollection, notificationData);
+  } catch (error) {
+    console.error("Error en notifyAdminTicketReplied:", error);
+    throw error;
   }
-  
-  return notificationService.createNotification({
-    userId: adminId,
-    ticketId,
-    ticketTitle,
-    type: 'ticket_replied',
-    message: `${userEmail} ha respondido al ticket "${ticketTitle}"`,
-    createdBy: userEmail,
-    adminOnly: true
-  });
 }
 
 // Para log de actividad (solo para administrador)
 export async function logTicketActivity(ticketId: string, ticketTitle: string, action: string, userEmail: string) {
-  // Similar a las funciones anteriores
-  const adminEmail = 'brundindev@gmail.com';
-  const q = query(
-    collection(getFirestore(), "usuarios"), 
-    where("email", "==", adminEmail)
-  );
-  
-  const querySnapshot = await getDocs(q);
-  let adminId = '';
-  
-  querySnapshot.forEach((doc) => {
-    adminId = doc.id;
-  });
-  
-  if (!adminId) {
-    console.error("No se encontró el ID del administrador");
-    return null;
+  try {
+    // Similar a las funciones anteriores
+    const adminEmail = 'brundindev@gmail.com';
+    const q = query(
+      collection(getFirestore(), "usuarios"), 
+      where("email", "==", adminEmail)
+    );
+    
+    const querySnapshot = await getDocs(q);
+    let adminId = '';
+    
+    querySnapshot.forEach((doc) => {
+      adminId = doc.id;
+    });
+    
+    if (!adminId) {
+      console.error("No se encontró el ID del administrador");
+      return null;
+    }
+    
+    // Tipo de notificación según la acción
+    let type: NotificationType = 'ticket_created';
+    
+    if (action.includes('eliminado')) {
+      type = 'ticket_deleted';
+    } else if (action.includes('cerrado')) {
+      type = 'ticket_closed';
+    } else if (action.includes('reabierto')) {
+      type = 'ticket_reopened';
+    } else if (action.includes('respondido')) {
+      type = 'ticket_replied';
+    } else if (action.includes('creado')) {
+      type = 'ticket_created';
+    }
+    
+    // Crear directamente en Firestore sin usar el servicio
+    const db = getFirestore();
+    const notificationsCollection = collection(db, "notifications");
+    
+    const notificationData = {
+      userId: adminId,
+      ticketId,
+      ticketTitle,
+      type,
+      message: `[LOG] ${userEmail} ha ${action} el ticket "${ticketTitle}"`,
+      createdBy: userEmail,
+      adminOnly: true,
+      read: false,
+      createdAt: Timestamp.now()
+    };
+    
+    return await addDoc(notificationsCollection, notificationData);
+  } catch (error) {
+    console.error("Error en logTicketActivity:", error);
+    throw error;
   }
-  
-  // Tipo de notificación según la acción
-  let type: NotificationType = 'ticket_created';
-  
-  if (action.includes('eliminado')) {
-    type = 'ticket_deleted';
-  } else if (action.includes('cerrado')) {
-    type = 'ticket_closed';
-  } else if (action.includes('reabierto')) {
-    type = 'ticket_reopened';
-  } else if (action.includes('respondido')) {
-    type = 'ticket_replied';
-  }
-  
-  return notificationService.createNotification({
-    userId: adminId,
-    ticketId,
-    ticketTitle,
-    type,
-    message: `[LOG] ${userEmail} ha ${action} el ticket "${ticketTitle}"`,
-    createdBy: userEmail,
-    adminOnly: true
-  });
 } 

@@ -129,10 +129,24 @@ export default function ContactoClient() {
         respuestas: []
       };
       
+      // Crear el ticket en Firestore
       const docRef = await addDoc(collection(db, "tickets"), ticketData);
       
-      // Enviar notificación al administrador
-      await notifyAdminNewTicket(docRef.id, asunto.trim(), user.email || "Usuario");
+      try {
+        // Enviar notificación al administrador (si falla, continuamos)
+        await notifyAdminNewTicket(docRef.id, asunto.trim(), user.email || "Usuario");
+      } catch (notifyError) {
+        console.error("Error al enviar la notificación al administrador:", notifyError);
+        // No bloqueamos el flujo si falla la notificación
+      }
+      
+      try {
+        // Registrar actividad (si falla, continuamos)
+        await logTicketActivity(docRef.id, asunto.trim(), "creado", user.email || "Usuario");
+      } catch (logError) {
+        console.error("Error al registrar la actividad:", logError);
+        // No bloqueamos el flujo si falla el log
+      }
       
       setAsunto('');
       setMensaje('');
@@ -180,17 +194,28 @@ export default function ContactoClient() {
       
       const respuestasActualizadas = [...ticketActual.respuestas, nuevaRespuesta];
       
+      // Actualizar el ticket con la nueva respuesta
       await updateDoc(ticketRef, {
         respuestas: respuestasActualizadas,
         // Si el ticket estaba cerrado, lo reabrimos al recibir una respuesta del usuario
         estado: ticketActual.estado === 'cerrado' ? 'abierto' : ticketActual.estado
       });
       
-      // Enviar notificación al administrador
-      await notifyAdminTicketReplied(selectedTicket, ticketActual.asunto, user.email || "Usuario");
+      try {
+        // Enviar notificación al administrador
+        await notifyAdminTicketReplied(selectedTicket, ticketActual.asunto, user.email || "Usuario");
+      } catch (notifyError) {
+        console.error("Error al enviar la notificación al administrador:", notifyError);
+        // No bloqueamos el flujo si falla la notificación
+      }
       
-      // Registrar actividad
-      await logTicketActivity(selectedTicket, ticketActual.asunto, "respondido", user.email || "Usuario");
+      try {
+        // Registrar actividad
+        await logTicketActivity(selectedTicket, ticketActual.asunto, "respondido", user.email || "Usuario");
+      } catch (logError) {
+        console.error("Error al registrar la actividad:", logError);
+        // No bloqueamos el flujo si falla el log
+      }
       
       setRespuesta('');
       setSuccess("Tu respuesta ha sido enviada");

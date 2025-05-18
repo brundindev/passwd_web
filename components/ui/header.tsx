@@ -157,14 +157,15 @@ export default function Header() {
                 <li className="flex items-center">
                   {/* Campana de notificaciones */}
                   <NotificationBell />
-                  <span className="mr-2 text-sm font-medium text-gray-200 hidden sm:block">
-                    {userProfile.nombre}
-                  </span>
+                  
+                  {/* Menú de usuario separado */}
                   <Menu as="div" className="relative ml-3">
                     {({ open }) => (
                       <>
-                        <Menu.Button className="flex rounded-full bg-gradient-to-br from-indigo-600 to-indigo-800 p-0.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/20">
-                          <span className="sr-only">Abrir menú de usuario</span>
+                        <Menu.Button className="flex items-center space-x-2 text-gray-200 hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all duration-300 rounded-lg px-2 py-1">
+                          <span className="text-sm font-medium hidden sm:block hover:text-indigo-300 transition-colors">
+                            {userProfile.nombre}
+                          </span>
                           <motion.div 
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
