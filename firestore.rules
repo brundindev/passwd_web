@@ -44,11 +44,11 @@ service cloud.firestore {
       // Los usuarios pueden leer sus propios tickets
       allow read: if isAuthenticated() && 
                  (resource.data.userId == request.auth.uid || isAdmin());
-      
+        
       // Los usuarios pueden actualizar sus propios tickets
       allow update: if isAuthenticated() && 
                    (resource.data.userId == request.auth.uid || isAdmin());
-      
+                     
       // Solo los administradores pueden eliminar tickets
       allow delete: if isAdmin();
     }

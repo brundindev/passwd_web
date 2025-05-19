@@ -21,20 +21,20 @@ const firestore = getFirestore(app);
 // Persistencia de IndexedDB solo en entorno cliente/navegador
 if (typeof window !== 'undefined') {
   // Habilitar la persistencia de IndexedDB silenciosamente
-  try {
-    enableIndexedDbPersistence(firestore)
-      .catch((error) => {
-        // Solo registrar errores reales, no advertencias de obsolescencia
-        if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') {
-          console.error("Error al habilitar la persistencia de Firestore:", error);
-        }
-      });
-    
+try {
+  enableIndexedDbPersistence(firestore)
+    .catch((error) => {
+      // Solo registrar errores reales, no advertencias de obsolescencia
+      if (error.code !== 'failed-precondition' && error.code !== 'unimplemented') {
+        console.error("Error al habilitar la persistencia de Firestore:", error);
+      }
+    });
+
     // Configurar persistencia local para autenticación
-    setPersistence(auth, browserLocalPersistence)
-      .catch((error) => {
-        console.error("Error al configurar la persistencia de autenticación:", error);
-      });
+setPersistence(auth, browserLocalPersistence)
+  .catch((error) => {
+    console.error("Error al configurar la persistencia de autenticación:", error);
+  });
   } catch (error) {
     // Capturar cualquier error pero no mostrar advertencias
     console.warn("Error al configurar persistencia:", error);
@@ -50,7 +50,7 @@ export class AuthService {
   getCurrentUser() {
     return auth.currentUser;
   }
-  
+
   // Iniciar sesión con correo y contraseña
   async signInWithEmailAndPassword(email: string, password: string) {
     try {

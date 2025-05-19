@@ -481,15 +481,6 @@ export default function PasswordManager() {
       return "Sin categoría";
     }
     
-    // Imprimir información de depuración para entender qué está pasando
-    console.log(`Buscando nombre para folderId: "${folderId}"`, {
-      tipoFolderId: typeof folderId,
-      mapContainsFolderId: folderMap.hasOwnProperty(folderId),
-      foldersLength: folders.length,
-      folderMapSize: Object.keys(folderMap).length
-    });
-    
-    // Categorías comunes predefinidas (con variaciones de capitalización)
     const commonCategories: Record<string, string> = {
       "personal": "Personal",
       "Personal": "Personal",
@@ -534,7 +525,7 @@ export default function PasswordManager() {
       "Otros": "Otros"
     };
     
-    // Verificar si es una categoría común (independiente de mayúsculas/minúsculas)
+    // Si es una categoría común predefinida, devolver directamente
     if (commonCategories[folderId]) {
       return commonCategories[folderId];
     }
@@ -550,18 +541,15 @@ export default function PasswordManager() {
       return folder.name;
     }
     
-    // Si no se encuentra pero es un ID válido, mostrar el ID como nombre
+    // Si no se encuentra pero es un ID válido, mostrar el ID formateado
     if (folderId.length > 0) {
-      // Intentar formatear el ID para que parezca un nombre
       try {
-        const formattedName = folderId
+        return folderId
           .replace(/-/g, ' ')
           .replace(/_/g, ' ')
           .split(' ')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
           .join(' ');
-        
-        return formattedName;
       } catch (error) {
         console.error("Error al formatear ID de carpeta:", error);
       }
@@ -573,11 +561,13 @@ export default function PasswordManager() {
 
   // Filtrar contraseñas basadas en la búsqueda y categoría/carpeta
   const filteredPasswords = passwords.filter(password => {
-    const matchesSearch = 
-      password.sitio.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      password.usuario.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      password.url.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (password.notas?.toLowerCase().includes(searchTerm.toLowerCase()));
+    // Asegurarse de que todos los campos existan antes de llamar a toLowerCase()
+    const matchesSearch = searchTerm === "" || (
+      (password.sitio?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (password.usuario?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (password.url?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      ((password.notas?.toLowerCase() || "").includes(searchTerm.toLowerCase()))
+    );
     
     // Si selectedCategory es "all", o si la categoría coincide con selectedCategory
     // Para manejar tanto string como array de folderIds

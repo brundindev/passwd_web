@@ -1,6 +1,4 @@
 {
   "/icon/route": "app/icon/route.js",
-  "/descargar/page": "app/descargar/page.js",
-  "/funciones/page": "app/funciones/page.js",
   "/(default)/page": "app/(default)/page.js"
 }

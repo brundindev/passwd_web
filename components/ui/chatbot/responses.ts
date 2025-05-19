@@ -5,9 +5,27 @@ const predefinedResponses: Record<string, string> = {
   "que es passwd": "PASSWD es un gestor de contraseñas seguro que te permite almacenar, generar y administrar todas tus contraseñas en un solo lugar. Utilizamos cifrado de extremo a extremo para garantizar que solo tú puedas acceder a tu información.",
   "cómo funciona passwd": "PASSWD funciona guardando todas tus contraseñas en una bóveda cifrada. Solo necesitas recordar una contraseña maestra para acceder a todas tus demás contraseñas. Además, puedes sincronizar tus contraseñas entre todos tus dispositivos.",
   "como funciona passwd": "PASSWD funciona guardando todas tus contraseñas en una bóveda cifrada. Solo necesitas recordar una contraseña maestra para acceder a todas tus demás contraseñas. Además, puedes sincronizar tus contraseñas entre todos tus dispositivos.",
-  "es seguro passwd": "¡Absolutamente! PASSWD utiliza cifrado XChaCha20 de nivel militar y cifrado de conocimiento cero, lo que significa que ni siquiera nosotros podemos ver tus contraseñas. Además, ofrecemos autenticación de dos factores para una capa adicional de seguridad.",
-  "seguridad": "PASSWD utiliza cifrado XChaCha20 de nivel militar y cifrado de conocimiento cero, lo que significa que ni siquiera nosotros podemos ver tus contraseñas. Además, implementamos verificación en dos pasos, protección contra phishing y alertas de seguridad en tiempo real.",
+  "es seguro passwd": "¡Absolutamente! PASSWD utiliza cifrado XChaCha20 y cifrado de conocimiento cero, lo que significa que ni siquiera nosotros podemos ver tus contraseñas. Además, ofrecemos autenticación de dos factores para una capa adicional de seguridad.",
+  "seguridad": "PASSWD utiliza cifrado XChaCha20 y cifrado de conocimiento cero, lo que significa que ni siquiera nosotros podemos ver tus contraseñas. Además, implementamos verificación en dos pasos, protección contra phishing y alertas de seguridad en tiempo real.",
   "características": "PASSWD incluye: generador de contraseñas seguras, autorrelleno de formularios, sincronización entre dispositivos, alertas de seguridad, detección de contraseñas débiles o reutilizadas, y almacenamiento seguro de notas y tarjetas de crédito.",
+  
+  // Nuevas respuestas sobre funcionalidades específicas
+  "tickets de soporte": "PASSWD incluye un sistema de tickets de soporte integrado. Puedes crear tickets desde la página de contacto para recibir ayuda personalizada. Los tickets se pueden categorizar, y recibirás notificaciones cuando el equipo responda a tus consultas. Todos los tickets se guardan para futuras referencias.",
+  "sistema de tickets": "Nuestro sistema de tickets te permite comunicarte directamente con el equipo de soporte. Puedes crear un ticket, adjuntar información relevante y seguir su estado. Las respuestas se notifican en tiempo real, y puedes responder directamente desde la interfaz para mantener toda la conversación organizada.",
+  "enviar ticket": "Para enviar un ticket de soporte, visita la sección 'Contacto' en el menú principal. Allí podrás crear un nuevo ticket describiendo tu consulta o problema. Una vez enviado, recibirás notificaciones de cualquier actualización y podrás responder directamente desde la misma interfaz.",
+  
+  "filtrado de contraseñas": "PASSWD te permite organizar y filtrar tus contraseñas de múltiples formas. Puedes crear carpetas personalizadas, utilizar etiquetas, y aplicar filtros de búsqueda por sitio web, nombre de usuario o notas. También puedes ordenar tus contraseñas por fecha, uso frecuente o nivel de seguridad.",
+  "carpetas de contraseñas": "Puedes organizar tus contraseñas en carpetas personalizadas como 'Personal', 'Trabajo', 'Finanzas', etc. El filtrado por carpetas te permite visualizar solo las contraseñas que pertenecen a una categoría específica, manteniendo tu bóveda organizada incluso con cientos de contraseñas.",
+  "buscar contraseñas": "Para buscar entre tus contraseñas, utiliza el campo de búsqueda en la parte superior de la página de contraseñas. Puedes filtrar por sitio, usuario, URL o notas. También puedes filtrar por carpetas seleccionando la categoría deseada en el panel de filtros.",
+  
+  "notificaciones": "PASSWD incluye un sistema de notificaciones para mantenerte informado sobre actividades importantes. Recibirás avisos cuando se respondan tus tickets de soporte, cuando se detecten contraseñas comprometidas o cuando haya actualizaciones de seguridad importantes.",
+  "sistema de notificaciones": "Nuestro sistema de notificaciones te alerta sobre eventos importantes relacionados con tu cuenta y tus contraseñas. Las notificaciones aparecen en el icono de campana en la barra de navegación, donde puedes ver un historial de todos los avisos recientes.",
+  "alertas": "PASSWD te envía alertas sobre posibles problemas de seguridad, como contraseñas débiles, reutilizadas o que han aparecido en filtraciones de datos. También recibirás notificaciones sobre actualizaciones en tickets de soporte y otras actividades importantes de la cuenta.",
+  
+  "autenticación biométrica": "PASSWD soporta autenticación biométrica (huella dactilar o reconocimiento facial) en dispositivos compatibles. Esto te permite acceder a tus contraseñas de forma rápida y segura sin tener que introducir tu contraseña maestra cada vez. Esta característica se encuentra actualmente en desarrollo y estará disponible próximamente.",
+  "huella dactilar": "La autenticación por huella dactilar es una característica de seguridad que permite desbloquear tu bóveda de contraseñas utilizando tu huella digital en dispositivos compatibles. Esta funcionalidad está actualmente en desarrollo y estará disponible pronto.",
+  "reconocimiento facial": "El reconocimiento facial es una forma segura de acceder a tu cuenta sin introducir tu contraseña maestra. Esta característica utiliza la tecnología biométrica de tu dispositivo y está actualmente en desarrollo, con planes para implementarse próximamente en nuestra aplicación.",
+  "biometría": "La autenticación biométrica en PASSWD utiliza las capacidades de seguridad integradas en tu dispositivo para permitir un acceso rápido y seguro a tus contraseñas. Actualmente, esta característica está en desarrollo y aparecerá marcada como 'En desarrollo' en nuestra página de características.",
   
   // Preguntas sobre suscripciones y precios
   "precio": "¡PASSWD es completamente gratuito! No existen planes de pago ni funciones premium. Todas las características están disponibles para todos los usuarios sin ningún tipo de limitación y sin publicidad. Es 100% gratuito para siempre.",
@@ -87,9 +105,9 @@ export async function getBotResponse(userMessage: string): Promise<string> {
     return "PASSWD es completamente gratuito, no necesitas ninguna versión de prueba. Todas las funcionalidades están disponibles para todos los usuarios sin ningún costo. ¡Regístrate hoy mismo para comenzar!";
   }
   
-  // Respuesta para preguntas sobre funciones/características
+  // Respuesta mejorada para preguntas sobre funciones/características
   if (normalizedMessage.match(/función|funciones|característica|características|puede hacer|puedes hacer/)) {
-    return "PASSWD incluye: generación de contraseñas seguras, autocompletado de formularios, sincronización entre dispositivos, alertas de seguridad, detección de contraseñas débiles, y almacenamiento seguro de información sensible. Todas estas funciones son 100% gratuitas. ¿Te gustaría saber más sobre alguna función específica?";
+    return "PASSWD incluye: gestión de contraseñas, generación de contraseñas seguras, organización en carpetas, sistema de tickets de soporte, notificaciones, sincronización entre dispositivos, alertas de seguridad, y próximamente autenticación biométrica. Todas estas funciones son 100% gratuitas. ¿Te gustaría saber más sobre alguna función específica?";
   }
   
   // Respuesta por defecto si no hay coincidencias

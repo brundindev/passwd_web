@@ -3,50 +3,47 @@ import BlurredShape from "@/public/images/blurred-shape.svg";
 
 export default function Cta() {
   return (
-    <section className="relative overflow-hidden">
-      <div
-        className="pointer-events-none absolute bottom-0 left-1/2 -z-10 -mb-24 ml-20 -translate-x-1/2"
-        aria-hidden="true"
-      >
-        <Image
-          className="max-w-none"
-          src={BlurredShape}
-          width={760}
-          height={668}
-          alt="Blurred shape"
-        />
-      </div>
-      <div className="max-w6xl mx-auto px-4 sm:px-6">
-        <div className="bg-linear-to-r from-transparent via-gray-800/50 py-6 md:py-10">
-          <div className="mx-auto max-w-3xl text-center">
+    <section className="cta-section">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="relative border-t py-12 [border-image:linear-gradient(to_right,transparent,--theme(--color-slate-400/.25),transparent)1] md:py-20">
+          {/* Background gradient */}
+          <div
+            className="pointer-events-none absolute inset-0 -z-10 m-auto h-[50rem] max-h-full w-[50rem] max-w-full rounded-full bg-slate-900/50 opacity-20 blur-3xl"
+            aria-hidden="true"
+          />
+          {/* Background glowing dots */}
+          <div
+            className="animate-pulse pointer-events-none absolute inset-0 -z-10"
+            aria-hidden="true"
+          >
+            <canvas data-particle-animation />
+          </div>
+          <div className="mx-auto max-w-xl text-center">
+            <div className="inline-flex items-center gap-3 pb-2 before:h-px before:w-8 before:bg-linear-to-r before:from-transparent before:to-indigo-200/50 after:h-px after:w-8 after:bg-linear-to-l after:from-transparent after:to-indigo-200/50">
+              <span className="inline-flex bg-linear-to-r from-indigo-500 to-indigo-200 bg-clip-text text-transparent">
+                El gestor de contraseñas definitivo
+              </span>
+            </div>
             <h2
-              className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-4 font-nacelle text-3xl font-semibold text-transparent md:text-4xl"
-              data-aos="fade-up"
+              className="animate-[gradient_6s_linear_infinite] bg-[linear-gradient(to_right,var(--color-gray-200),var(--color-indigo-200),var(--color-gray-50),var(--color-indigo-300),var(--color-gray-200))] bg-[length:200%_auto] bg-clip-text pb-3 font-nacelle text-4xl font-semibold text-transparent md:text-5xl"
             >
-              Protege tu vida digital con PASSWD.
+              ¿Todo listo para comenzar a usar PASSWD?
             </h2>
-            <div className="mx-auto max-w-xs sm:flex sm:max-w-none sm:justify-center">
-              <div data-aos="fade-up" data-aos-delay={400}>
-                <a
-                  className="btn group mb-4 w-full bg-linear-to-t from-indigo-600 to-indigo-500 bg-[length:100%_100%] bg-[bottom] text-white shadow-[inset_0px_1px_0px_0px_--theme(--color-white/.16)] hover:bg-[length:100%_150%] sm:mb-0 sm:w-auto"
-                  href="/descargar"
-                >
-                  <span className="relative inline-flex items-center">
-                    Descargar ahora
-                    <span className="ml-1 tracking-normal text-white/50 transition-transform group-hover:translate-x-0.5">
-                      -&gt;
-                    </span>
+            <p className="pb-8 text-lg text-indigo-200/65">
+              Registra tu cuenta gratuita ahora y comienza a gestionar tus contraseñas de forma segura.
+            </p>
+            <div>
+              <a
+                className="btn group bg-linear-to-t from-indigo-600 to-indigo-500 bg-[length:100%_100%] bg-[bottom] text-white shadow-[inset_0px_1px_0px_--theme(--color-white/.16)] hover:bg-[length:100%_150%]"
+                href="/registro"
+              >
+                <span className="relative inline-flex items-center">
+                  Crear cuenta gratuita
+                  <span className="ml-1 tracking-normal text-white/50 transition-transform group-hover:translate-x-0.5">
+                    -&gt;
                   </span>
-                </a>
-              </div>
-              <div data-aos="fade-up" data-aos-delay={600}>
-                <a
-                  className="btn relative w-full bg-linear-to-b from-gray-800 to-gray-800/60 bg-[length:100%_100%] bg-[bottom] text-gray-300 before:pointer-events-none before:absolute before:inset-0 before:rounded-[inherit] before:border before:border-transparent before:[background:linear-gradient(to_right,var(--color-gray-800),var(--color-gray-700),var(--color-gray-800))_border-box] before:[mask-composite:exclude_!important] before:[mask:linear-gradient(white_0_0)_padding-box,_linear-gradient(white_0_0)] hover:bg-[length:100%_150%] sm:ml-4 sm:w-auto"
-                  href="/contacto"
-                >
-                  Contactar soporte
-                </a>
-              </div>
+                </span>
+              </a>
             </div>
           </div>
         </div>
