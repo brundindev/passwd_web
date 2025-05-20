@@ -14,7 +14,7 @@ interface SavedPassword {
   usuario: string;
   contrasena: string;
   fechaCreacion: Date;
-  fechaModificacion?: Date | null;
+  ultimaModificacion?: Date | null;
   categoria?: string | string[];
   notas?: string;
 }
@@ -278,13 +278,13 @@ export default function PasswordManager() {
               }
               
               // Normalizar las modificaciones
-              let fechaModificacion;
-              if (data.fechaModificacion) {
-                fechaModificacion = data.fechaModificacion.toDate ? data.fechaModificacion.toDate() : new Date(data.fechaModificacion);
+              let ultimaModificacion;
+              if (data.ultimaModificacion) {
+                ultimaModificacion = data.ultimaModificacion.toDate ? data.ultimaModificacion.toDate() : new Date(data.ultimaModificacion);
               } else if (data.updatedAt) {
-                fechaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+                ultimaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
               } else {
-                fechaModificacion = null;
+                ultimaModificacion = null;
               }
               
               passwordsData.push({
@@ -294,7 +294,7 @@ export default function PasswordManager() {
                 usuario: data.usuario || data.username || data.user || "",
                 contrasena: data.contrasena || data.password || data.pass || "",
                 fechaCreacion: fechaCreacion,
-                fechaModificacion: fechaModificacion,
+                ultimaModificacion: ultimaModificacion,
                 categoria: folderIdsArray,
                 notas: data.notas || data.notes || data.description || ""
               });
@@ -352,13 +352,13 @@ export default function PasswordManager() {
               }
               
               // Normalizar las modificaciones
-              let fechaModificacion;
-              if (data.fechaModificacion) {
-                fechaModificacion = data.fechaModificacion.toDate ? data.fechaModificacion.toDate() : new Date(data.fechaModificacion);
+              let ultimaModificacion;
+              if (data.ultimaModificacion) {
+                ultimaModificacion = data.ultimaModificacion.toDate ? data.ultimaModificacion.toDate() : new Date(data.ultimaModificacion);
               } else if (data.updatedAt) {
-                fechaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+                ultimaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
               } else {
-                fechaModificacion = null;
+                ultimaModificacion = null;
               }
               
               passwordsData.push({
@@ -368,7 +368,7 @@ export default function PasswordManager() {
                 usuario: data.usuario || data.username || data.user || "",
                 contrasena: data.contrasena || data.password || data.pass || "",
                 fechaCreacion: fechaCreacion,
-                fechaModificacion: fechaModificacion,
+                ultimaModificacion: ultimaModificacion,
                 categoria: folderIdsArray,
                 notas: data.notas || data.notes || data.description || ""
               });
@@ -415,13 +415,13 @@ export default function PasswordManager() {
         }
         
         // Normalizar las modificaciones
-        let fechaModificacion;
-        if (data.fechaModificacion) {
-          fechaModificacion = data.fechaModificacion.toDate ? data.fechaModificacion.toDate() : new Date(data.fechaModificacion);
+        let ultimaModificacion;
+        if (data.ultimaModificacion) {
+          ultimaModificacion = data.ultimaModificacion.toDate ? data.ultimaModificacion.toDate() : new Date(data.ultimaModificacion);
         } else if (data.updatedAt) {
-          fechaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+          ultimaModificacion = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
         } else {
-          fechaModificacion = null;
+          ultimaModificacion = null;
         }
         
         passwordsData.push({
@@ -431,7 +431,7 @@ export default function PasswordManager() {
           usuario: data.usuario || data.username || data.user || "",
           contrasena: data.contrasena || data.password || data.pass || "",
           fechaCreacion: fechaCreacion,
-          fechaModificacion: fechaModificacion,
+          ultimaModificacion: ultimaModificacion,
           categoria: categoriaArray.length > 0 ? categoriaArray : "",
           notas: data.notas || data.notes || data.description || ""
         });
@@ -938,7 +938,7 @@ export default function PasswordManager() {
                     </svg>
                     <span className="text-gray-400 mr-1">Última modificación:</span>
                     <span className="text-gray-300">
-                      {password.fechaModificacion ? formatDate(password.fechaModificacion) : "No modificada"}
+                      {password.ultimaModificacion ? formatDate(password.ultimaModificacion) : "No modificada"}
                     </span>
                   </div>
                 </div>
